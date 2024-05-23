@@ -8,6 +8,8 @@ import Typography from '@mui/material/Typography';
 import { IFarm } from '@/interface/farm';
 import FarmDetailModal from './FarmDetailModal';
 import { useState } from 'react';
+import Divider from '@mui/material/Divider';
+import Progress from './Progress';
 
 export default function FarmCard({ farm }: { farm: IFarm }) {
   const [open, setOpen] = useState(false);
@@ -27,11 +29,24 @@ export default function FarmCard({ farm }: { farm: IFarm }) {
         <Typography variant="body2" color="text.secondary">
           {farm.description}
         </Typography>
+        <Divider className="mt-5" />
+        <div className="mt-5 bg-gray-100 rounded-lg p-3">
+          <Typography variant="body2" color="text.secondary">
+            Date: {farm.details?.date}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Time: {farm.details?.start_time} - {farm.details?.end_time}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Cycle: {farm.details?.cycle}
+          </Typography>
+        </div>
       </CardContent>
       <CardActions>
         <Button size="small" onClick={handleInit}>
           Init
         </Button>
+        {farm.details?.isActivated && <Progress />}
         <FarmDetailModal open={open} setOpen={setOpen} />
       </CardActions>
     </Card>
