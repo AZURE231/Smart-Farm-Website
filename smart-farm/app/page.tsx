@@ -1,5 +1,5 @@
+import Clock from '@/components/Clock';
 import FarmCard from '@/components/FarmCard';
-import Image from 'next/image';
 
 const farms = [
   {
@@ -57,7 +57,8 @@ const farms = [
 
 export default function Home() {
   return (
-    <main className="container max-w-4xl mx-auto flex items-center justify-center h-screen">
+    <main className="container max-w-4xl mx-auto flex flex-col items-center justify-center mt-20 md:mt-0 md:h-screen">
+      <Clock />
       <div className="flex flex-col md:flex-row gap-3">
         {farms.map((farm) => (
           <FarmCard key={farm.id} farm={farm} />
