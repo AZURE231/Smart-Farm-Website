@@ -1,57 +1,64 @@
 import Clock from '@/components/Clock';
 import FarmCard from '@/components/FarmCard';
+import { IFarm } from '@/interface/farm';
 
-const farms = [
+const farms: IFarm[] = [
   {
     id: '1',
     name: 'Farm 1',
     description: 'Farm 1 description',
     image: 'carot.jpg',
-    details: {
-      id: '1',
-      mixer_1: 'mixer 1',
-      mixer_2: 'mixer 2',
-      mixer_3: 'mixer 3',
-      start_time: '12:00',
-      end_time: '18:00',
-      date: '2021-10-10',
-      isActivated: true,
-      cycle: 1,
-    },
+    details: [
+      {
+        id: '1',
+        mixer_1: 'mixer 1',
+        mixer_2: 'mixer 2',
+        mixer_3: 'mixer 3',
+        start_time: '12:00',
+        end_time: '18:00',
+        date: '2021-10-10',
+        isActivated: true,
+        cycle: 1,
+      },
+    ],
   },
   {
     id: '2',
     name: 'Farm 2',
     description: 'Farm 2 description',
     image: 'letttuce.jpg',
-    details: {
-      id: '2',
-      mixer_1: 'mixer 1',
-      mixer_2: 'mixer 2',
-      mixer_3: 'mixer 3',
-      start_time: '12:00',
-      end_time: '18:00',
-      date: '2021-10-10',
-      isActivated: false,
-      cycle: 1,
-    },
+    details: [
+      {
+        id: '2',
+        mixer_1: 'mixer 1',
+        mixer_2: 'mixer 2',
+        mixer_3: 'mixer 3',
+        start_time: '12:00',
+        end_time: '18:00',
+        date: '2021-10-10',
+        isActivated: false,
+        cycle: 1,
+      },
+    ],
   },
   {
     id: '3',
     name: 'Farm 3',
     description: 'Farm 3 description',
     image: 'tomatoes.jpg',
-    details: {
-      id: '3',
-      mixer_1: 'mixer 1',
-      mixer_2: 'mixer 2',
-      mixer_3: 'mixer 3',
-      start_time: '12:00',
-      end_time: '18:00',
-      date: '2021-10-10',
-      isActivated: false,
-      cycle: 1,
-    },
+    details: [
+      {
+        id: '3',
+        mixer_1: 'mixer 1',
+        mixer_2: 'mixer 2',
+        mixer_3: 'mixer 3',
+        start_time: '12:00',
+        end_time: '18:00',
+        date: '2021-10-10',
+        isActivated: false,
+        cycle: 1,
+      },
+    ],
   },
 ];
 
