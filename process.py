@@ -2,54 +2,122 @@ from abc import ABC
 import datetime
 
 
+class Capacity():
+     def __init__(self, mixer: list[float] = [20,20,20], n_mixers: int = 3, time_step = datetime.time(second=20), perMinute: bool = False):
+         self.mixer = mixer
+         self.time_step = time_step
+         if perMinute:
+             self.mixer = list(map(lambda x: x / 60 * time_step.second, mixer))
+         self.n_mixers = n_mixers
+         assert len(mixer) == n_mixers, f"Mixer should have {self.n_mixers} items."
+
+
 class Process(ABC): pass
 
-class WateringProcess(Process):
-    def __init__(self, priority, mixer1, mixer2, mixer3, area: int, start_time, end_time, emergency, time_out, isActive: bool = False, cycle: int = 0):
+class StepProcess(Process):
+    def __init__(self, area: int, mixer: list[float], n_mixers: int = 3):
         """
 
-        :param priority:    Priority to complete the process.
-        :param mixer1:      Volume of liquid from Mixer 1 in ml.
-        :param mixer2:      Volume of liquid from Mixer 2 in ml.
-        :param mixer3:      Volume of liquid from Mixer 3 in ml.
         :param area:        int
                             Area where the process is watering.
+        :param mixer:       List of Volume of liquid in a single time step from Mixer 1..3 in ml.
+        """
+        self.area = area
+        self.mixer = mixer
+        self.n_mixers = n_mixers
+        assert len(mixer) == n_mixers, f"Mixer should have {self.n_mixers} items."
+
+    def __str__(self):
+        s = "===============================\n" +\
+            f"Area: {self.area}\n"
+        for i in range(self.n_mixers):
+            s += f"Mixer {i+1}: {self.mixer[i]}\n"
+        return s
+
+class WaterProcess(Process):
+    def __init__(self, start_time, end_time, time_out, area: int,
+                 mixer: list[float], n_mixers: int = 3, emergency = 0,
+                 priority: int = 1, isActive: bool = False, cycle: int = 0):
+        """
         :param start_time:  datetime.datetime
                             Expected time the process should start.
         :param end_time:    datetime.datetime
                             Expected time the process should stop.
-        # :param date:        Date on which the process defined.
-        :param emergency:   Exception from system/ environment/ users.
         :param time_out:
+        :param time_step:   datetime.time
+                            The amount of time which the process is divided into
+                            steps.
+        :param area:        int
+                            Area where the process is watering.
+        :param mixer:       List of Volume of liquid from Mixer 1..3 in ml.
+        :param date:        Date on which the process defined.
+        :param emergency:   Exception from system/ environment/ users.
+        :param priority:    Priority to complete the process.
         :param isActive:    State of the process. If True, the process is running.
         :param cycle:       int
                             The n-th time of watering a specified area in the day.
         """
-        # self.priority = priority
-        self.mixer1 = mixer1
-        self.mixer2 = mixer2
-        self.mixer3 = mixer3
+        self.priority = priority
+        self.mixer = mixer
+        self.n_mixers = n_mixers
+        assert len(mixer) == n_mixers, f"Mixer should have {self.n_mixers} items."
         self.area = area
         self.start_time = start_time
         self.end_time = end_time
-        # self.date = date
         self.emergency = emergency
         self.time_out = time_out
         self.isActive = isActive
         self.cycle = cycle
 
+
+    def time_step_divide(self, time_step = datetime.time(second=20), capacity: Capacity = None):
+        """
+        Divide the process into time steps.
+        :return:    StepProcess with scaled mixers' volume with capacity.
+        """
+        if capacity:
+            max_ratio = 0
+            max_index = -1
+            mixer_ratio = [self.mixer[i]/capacity.mixer[i] for i in range(self.n_mixers)]
+            for i in range(self.n_mixers):
+                if mixer_ratio[i] > max_ratio:
+                    max_ratio = mixer_ratio[i]
+                    max_index = i
+            mixer = []
+            for i in range(self.n_mixers):
+                if i == max_index:
+                    mixer.append(capacity.mixer[i])
+                else:
+                    mixer.append(capacity.mixer[max_index] * self.mixer[i] / self.mixer[max_index])
+            return StepProcess(area=self.area, mixer=mixer, n_mixers=self.n_mixers)
+
+        time_ratio = (self.end_time - self.start_time).total_seconds() / time_step.second
+        mixer = list(map(lambda x: x/time_ratio, self.mixer))
+        return StepProcess(area=self.area, mixer=mixer, n_mixers=self.n_mixers)
+
+
     def remain_time(self):
         return self.end_time - datetime.datetime.now()
 
+    def update(self, mixer: list[float]):
+        assert len(mixer) == self.n_mixers, f"Mixer should have {self.n_mixers} items."
+        self.mixer = list(map(lambda curr, step: curr - step, self.mixer, mixer))
+
+
+
     def __str__(self):
-        s = f"Start time: {str(self.start_time)}" \
-            f"End time: {str(self.end_time)}" \
-            f"isActive: {self.isActive}" \
-            f"Area: {self.area}" \
-            f"Cycle: {self.cycle}" \
-            f"Mixer 1: {self.mixer1}" \
-            f"Mixer 2: {self.mixer2}" \
-            f"Mixer 3: {self.mixer3}" \
-            f"Timeout: {str(self.time_out)}" \
-            f"Emergency: {str(self.emergency)}"
+        s = "===============================\n" + \
+            f"Priority: {self.priority}\n" \
+            f"Start time: {str(self.start_time)}\n" \
+            f"End time: {str(self.end_time)}\n" \
+            f"isActive: {self.isActive}\n" \
+            f"Area: {self.area}\n"
+        for i in range(self.n_mixers):
+            s += f"Mixer {i+1}: {self.mixer[i]}\n"
+        s += f"Cycle: {self.cycle}\n" \
+             f"Timeout: {str(self.time_out)}\n" \
+             f"Emergency: {str(self.emergency)}"
         return s
+
+    def __lt__(self, other):
+        return self.start_time < other.start_time
