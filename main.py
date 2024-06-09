@@ -1,7 +1,7 @@
 import sys
 from Adafruit_IO import MQTTClient
 import time, random
-from datetime import datetime, time
+import datetime
 from process import WaterProcess, Capacity
 import scheduler
 
@@ -49,36 +49,36 @@ client.loop_background()
 process_list = [
     WaterProcess(
         mixer=[0, 100, 100], n_mixers=3, area=3,
-        start_time=datetime(2024, 7, 9, 12, 40),
-        end_time=datetime(2024, 7, 9, 12, 55),
-        emergency=0, time_out=datetime(2025, 7, 8, 13),
+        start_time=datetime.datetime(2024, 6, 9, 12, 40),
+        end_time=datetime.datetime(2024, 6, 9, 12, 55),
+        emergency=0, time_out=datetime.datetime(2025, 7, 8, 13),
         priority=1
     ),
     WaterProcess(
         mixer=[200, 150, 100], n_mixers=3, area=3,
-        start_time=datetime(2024, 6, 9, 12, 30),
-        end_time=datetime(2024, 6, 9, 12, 40),
-        emergency=0, time_out=datetime(2024, 6, 7, 13),
+        start_time=datetime.datetime(2024, 6, 9, 12, 30),
+        end_time=datetime.datetime(2024, 6, 9, 12, 40),
+        emergency=0, time_out=datetime.datetime(2024, 6, 7, 13),
         priority=0,
     ),
     WaterProcess(
         mixer=[100, 200, 300], n_mixers=3, area=1,
-        start_time=datetime(2024, 6, 9, 9, 30),
-        end_time=datetime(2024, 6, 9, 9, 40),
-        emergency=0, time_out=datetime(2024, 6, 7, 10),
+        start_time=datetime.datetime(2024, 6, 9, 9, 30),
+        end_time=datetime.datetime(2024, 6, 9, 9, 40),
+        emergency=0, time_out=datetime.datetime(2024, 6, 7, 10),
     ),
     WaterProcess(
         mixer=[200, 0, 200], n_mixers=3, area=2,
-        start_time=datetime(2024, 6, 9, 14, 30),
-        end_time=datetime(2024, 6, 9, 15, 40),
-        emergency=0, time_out=datetime(2024, 6, 7, 16),
+        start_time=datetime.datetime(2024, 6, 9, 14, 30),
+        end_time=datetime.datetime(2024, 6, 9, 15, 40),
+        emergency=0, time_out=datetime.datetime(2024, 6, 7, 16),
         priority=1,
     ),
     WaterProcess(
         mixer=[0, 200, 100], n_mixers=3, area=1,
-        start_time=datetime(2024, 6, 9, 14, 41),
-        end_time=datetime(2024, 6, 9, 14, 55),
-        emergency=0, time_out=datetime(2024, 6, 7, 14, 59),
+        start_time=datetime.datetime(2024, 6, 9, 14, 41),
+        end_time=datetime.datetime(2024, 6, 9, 14, 55),
+        emergency=0, time_out=datetime.datetime(2024, 6, 7, 14, 59),
         priority=0,
     ),
 ]
@@ -86,7 +86,7 @@ process_list = [
 complete_process = []
 
 NUM_PROCESS = len(process_list)
-TIMESTEP = time(second=20)
+TIMESTEP = datetime.time(second=1)
 CAPACITY = Capacity(mixer=[20, 20, 20], n_mixers=3, time_step=TIMESTEP)
 counter = 0
 
@@ -99,6 +99,7 @@ counter = 0
 # Update completion time if remaining time = 0
 
 while True:
+    time.sleep(1)
     counter -= 1
     # Complete all process
     if not process_list:
@@ -109,6 +110,9 @@ while True:
         counter = int(TIMESTEP.second)
         process_list = scheduler.sort_by_time(process_list)
         select_index, select_process = scheduler.select_process(process_list, TIMESTEP, CAPACITY)
+        if not select_process:
+            print("No process selected.")
+            continue
 
         # Terminate process through com port
         MIXER = select_process.mixer    # List of mixer volume. Ex: [20, 10, 15]
@@ -123,9 +127,11 @@ while True:
         # Process terminated successfully
         if scheduler.update_process(process_list[select_index], MIXER):
             complete_process.append(process_list.pop(select_index))
+        print("___________________\nComplete process: ", len(complete_process))
         # Update to server
         print("Publish sensor to server ...")
         temp = random.randint(10,100)
 
+
+
     # readSerial(client)
-    time.sleep(1)

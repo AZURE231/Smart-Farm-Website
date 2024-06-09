@@ -6,8 +6,9 @@ import sys
 
 def sort_by_time(process_list: list[WaterProcess]):
     # Sort the list with start time
+    n_process = len(process_list)
     heapq.heapify(process_list)
-    return [heapq.heappop(process_list) for i in range(NUM_PROCESS)]
+    return [heapq.heappop(process_list) for i in range(n_process)]
 
 def select_process(process_list: list[WaterProcess], time_step: time, capacity: Capacity):
     """
@@ -28,10 +29,12 @@ def select_process(process_list: list[WaterProcess], time_step: time, capacity: 
                 highest_priority = process_list[index].priority
                 highest_priority_index = index
 
+    if highest_priority_index is None:
+        return None, None
     print("===========================\nSelected process:")
     print(str(process_list[highest_priority_index]))
+    process_list[highest_priority_index].isActive = True
     return highest_priority_index, process_list[highest_priority_index].time_step_divide(time_step, capacity)
-
 
 def update_process(process: WaterProcess, mixer: list[float]):
     """
@@ -42,6 +45,7 @@ def update_process(process: WaterProcess, mixer: list[float]):
     """
     assert len(process.mixer) == len(mixer), f"Mixer should have {process.n_mixers} items."
     process.update(mixer)
+    process.isActive = False
     print("===========================\nUpdated process:")
     print(str(process))
     for item in process.mixer:
@@ -49,5 +53,10 @@ def update_process(process: WaterProcess, mixer: list[float]):
             return False
     return True
 
+
+def print_process_list(process_list: list[WaterProcess]):
+    print("===========================\nProcess list:")
+    for process in process_list:
+        print(str(process))
 
 ##### Further develop: Deploy DBMS.
