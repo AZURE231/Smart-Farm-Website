@@ -28,7 +28,7 @@ class StepProcess(Process):
         assert len(mixer) == n_mixers, f"Mixer should have {self.n_mixers} items."
 
     def __str__(self):
-        s = "===============================\n" +\
+        s = "________________________\n" +\
             f"Area: {self.area}\n"
         for i in range(self.n_mixers):
             s += f"Mixer {i+1}: {self.mixer[i]}\n"
@@ -106,7 +106,7 @@ class WaterProcess(Process):
 
 
     def __str__(self):
-        s = "===============================\n" + \
+        s = "________________________\n" + \
             f"Priority: {self.priority}\n" \
             f"Start time: {str(self.start_time)}\n" \
             f"End time: {str(self.end_time)}\n" \
