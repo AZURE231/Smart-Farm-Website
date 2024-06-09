@@ -3,7 +3,7 @@ export interface IFarm {
   name: string;
   description: string;
   image: string;
-  details?: IFarmDetail;
+  details: IFarmDetail[];
 }
 
 export interface IFarmDetail {

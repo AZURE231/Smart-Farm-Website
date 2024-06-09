@@ -9,7 +9,8 @@ import { IFarm } from '@/interface/farm';
 import FarmDetailModal from './FarmDetailModal';
 import { useState } from 'react';
 import Divider from '@mui/material/Divider';
-import Progress from './Progress';
+import CycleCard from './CycleCard';
+import { Fab, SvgIcon } from '@mui/material';
 
 export default function FarmCard({ farm }: { farm: IFarm }) {
   const [open, setOpen] = useState(false);
@@ -30,23 +31,30 @@ export default function FarmCard({ farm }: { farm: IFarm }) {
           {farm.description}
         </Typography>
         <Divider className="mt-5" />
-        <div className="mt-5 bg-gray-100 rounded-lg p-3">
-          <Typography variant="body2" color="text.secondary">
-            Date: {farm.details?.date}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Time: {farm.details?.start_time} - {farm.details?.end_time}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Cycle: {farm.details?.cycle}
-          </Typography>
-        </div>
+        {farm.details &&
+          farm.details.map((detail) => (
+            <CycleCard key={detail.id} cycleDetails={detail} />
+          ))}
       </CardContent>
       <CardActions>
         <Button size="small" onClick={handleInit}>
-          Init
+          <Fab color="success" aria-label="add" size="medium">
+            <SvgIcon>
+              {/* credit: plus icon from https://heroicons.com/ */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="24px"
+                viewBox="0 0 24 24"
+                width="24px"
+                fill="#ffffff"
+              >
+                <path d="M0 0h24v24H0V0z" fill="none" />
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+              </svg>
+            </SvgIcon>
+          </Fab>
         </Button>
-        {farm.details?.isActivated && <Progress />}
+        {/* {farm.details?.isActivated && <Progress />} */}
         <FarmDetailModal open={open} setOpen={setOpen} />
       </CardActions>
     </Card>
