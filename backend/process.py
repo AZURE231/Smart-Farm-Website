@@ -35,15 +35,16 @@ class StepProcess(Process):
         return s
 
 class WaterProcess(Process):
-    def __init__(self, start_time, end_time, time_out, area: int,
-                 mixer: list[float], n_mixers: int = 3, emergency = 0,
-                 priority: int = 1, isActive: bool = False, cycle: int = 0):
+    def __init__(self, id: int, start_time, end_time, area: int,
+                 mixer: list[float], n_mixers: int = 3, priority: int = 1,
+                 isActive: bool = False, cycle: int = 0):
         """
+        :param id:          int
+                            Unique identifier of the process.
         :param start_time:  datetime.datetime
                             Expected time the process should start.
         :param end_time:    datetime.datetime
                             Expected time the process should stop.
-        :param time_out:
         :param time_step:   datetime.time
                             The amount of time which the process is divided into
                             steps.
@@ -51,12 +52,12 @@ class WaterProcess(Process):
                             Area where the process is watering.
         :param mixer:       List of Volume of liquid from Mixer 1..3 in ml.
         :param date:        Date on which the process defined.
-        :param emergency:   Exception from system/ environment/ users.
         :param priority:    Priority to complete the process.
         :param isActive:    State of the process. If True, the process is running.
         :param cycle:       int
                             The n-th time of watering a specified area in the day.
         """
+        self.id = id
         self.priority = priority
         self.mixer = mixer
         self.n_mixers = n_mixers
@@ -64,8 +65,6 @@ class WaterProcess(Process):
         self.area = area
         self.start_time = start_time
         self.end_time = end_time
-        self.emergency = emergency
-        self.time_out = time_out
         self.isActive = isActive
         self.cycle = cycle
 
@@ -106,7 +105,8 @@ class WaterProcess(Process):
 
 
     def __str__(self):
-        s = "________________________\n" + \
+        s = "________________________\nWatering Process:\n" + \
+            f"ID: {self.id}\n" \
             f"Priority: {self.priority}\n" \
             f"Start time: {str(self.start_time)}\n" \
             f"End time: {str(self.end_time)}\n" \
@@ -114,9 +114,7 @@ class WaterProcess(Process):
             f"Area: {self.area}\n"
         for i in range(self.n_mixers):
             s += f"Mixer {i+1}: {self.mixer[i]}\n"
-        s += f"Cycle: {self.cycle}\n" \
-             f"Timeout: {str(self.time_out)}\n" \
-             f"Emergency: {str(self.emergency)}"
+        s += f"Cycle: {self.cycle}\n"
         return s
 
     def __lt__(self, other):
