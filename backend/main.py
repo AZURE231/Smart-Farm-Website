@@ -1,6 +1,6 @@
 import sys
 from Adafruit_IO import MQTTClient
-import time, random
+import time
 import datetime
 from process import WaterProcess, Capacity
 import scheduler
@@ -48,44 +48,43 @@ client.loop_background()
 
 process_list = [
     WaterProcess(
+        id=1,
         mixer=[0, 100, 100], n_mixers=3, area=3,
         start_time=datetime.datetime(2024, 6, 9, 12, 40),
         end_time=datetime.datetime(2024, 6, 9, 12, 55),
-        emergency=0, time_out=datetime.datetime(2025, 7, 8, 13),
         priority=1
     ),
     WaterProcess(
+        id=2,
         mixer=[200, 150, 100], n_mixers=3, area=3,
         start_time=datetime.datetime(2024, 6, 9, 12, 30),
         end_time=datetime.datetime(2024, 6, 9, 12, 40),
-        emergency=0, time_out=datetime.datetime(2024, 6, 7, 13),
         priority=0,
     ),
     WaterProcess(
+        id=3,
         mixer=[100, 200, 300], n_mixers=3, area=1,
         start_time=datetime.datetime(2024, 6, 9, 9, 30),
         end_time=datetime.datetime(2024, 6, 9, 9, 40),
-        emergency=0, time_out=datetime.datetime(2024, 6, 7, 10),
     ),
     WaterProcess(
+        id=4,
         mixer=[200, 0, 200], n_mixers=3, area=2,
         start_time=datetime.datetime(2024, 6, 9, 14, 30),
         end_time=datetime.datetime(2024, 6, 9, 15, 40),
-        emergency=0, time_out=datetime.datetime(2024, 6, 7, 16),
         priority=1,
     ),
     WaterProcess(
+        id=5,
         mixer=[0, 200, 100], n_mixers=3, area=1,
         start_time=datetime.datetime(2024, 6, 9, 14, 41),
         end_time=datetime.datetime(2024, 6, 9, 14, 55),
-        emergency=0, time_out=datetime.datetime(2024, 6, 7, 14, 59),
         priority=0,
     ),
 ]
 
 complete_process = []
 
-NUM_PROCESS = len(process_list)
 TIMESTEP = datetime.time(second=1)
 CAPACITY = Capacity(mixer=[20, 20, 20], n_mixers=3, time_step=TIMESTEP)
 counter = 0
@@ -129,8 +128,8 @@ while True:
             complete_process.append(process_list.pop(select_index))
         print("___________________\nComplete process: ", len(complete_process))
         # Update to server
-        print("Publish sensor to server ...")
-        temp = random.randint(10,100)
+        # print("Publish sensor to server ...")
+        # temp = random.randint(10,100)
 
 
 

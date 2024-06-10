@@ -67,6 +67,7 @@ class WaterProcess(Process):
         self.end_time = end_time
         self.isActive = isActive
         self.cycle = cycle
+        self.defined_mixer = mixer
 
 
     def time_step_divide(self, time_step = datetime.time(second=20), capacity: Capacity = None):
@@ -128,5 +129,6 @@ class WaterProcess(Process):
             "isActive": self.isActive,
             "area": self.area,
             "mixer": self.mixer,
+            "init_mixer": self.defined_mixer,
             "cycle": self.cycle
         }
