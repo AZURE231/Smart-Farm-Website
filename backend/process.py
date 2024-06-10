@@ -119,3 +119,14 @@ class WaterProcess(Process):
 
     def __lt__(self, other):
         return self.start_time < other.start_time
+
+    def __dict__(self, time_format="%d/%m/%Y %H:%M:%S"):
+        return {
+            "id": self.id,
+            "start_time": self.start_time.strftime(time_format),
+            "end_time": self.end_time.strftime(time_format),
+            "isActive": self.isActive,
+            "area": self.area,
+            "mixer": self.mixer,
+            "cycle": self.cycle
+        }

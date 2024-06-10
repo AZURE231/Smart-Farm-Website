@@ -1,4 +1,5 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
+from gevent.pywsgi import WSGIServer
 
 from process import WaterProcess, Capacity
 import scheduler
@@ -7,6 +8,17 @@ import datetime
 app = Flask(__name__)
 
 process_list = []
+# updated_process = None
+updated_process = WaterProcess(
+    id=1,
+    start_time=datetime.datetime.now(),
+    end_time=datetime.datetime.now(),
+    mixer=[100, 200, 300],
+    area=1,
+    priority=1,
+    isActive=False,
+    cycle=0
+)
 TIME_FORMAT = "%d/%m/%Y %H:%M:%S"
 
 
@@ -62,6 +74,16 @@ def delete_process():
     scheduler.print_process_list(process_list)
     return "Process deleted."
 
+@app.route('/process_data', methods=["GET"])
+def send_process_data():
+    global updated_process
+    return jsonify(updated_process.__dict__(TIME_FORMAT))
+
+@app.route('/process_list')
+def send_process_list():
+    global process_list
+    return jsonify([process.__dict__(TIME_FORMAT) for process in process_list])
+
 def get_cycle(ctx: list[WaterProcess], area):
     cycle = 0
     for process in ctx:
@@ -77,5 +99,9 @@ def find_process(ctx: list[WaterProcess], id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Debug/Development
+    # app.run(debug=True, host="0.0.0.0", port="5000")
+    # Production
+    http_server = WSGIServer(("127.0.0.1", 8000), app)
+    http_server.serve_forever()
 
