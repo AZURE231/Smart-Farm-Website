@@ -10,6 +10,7 @@ import { Input } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers';
 import { useState } from 'react';
 import { Dayjs } from 'dayjs';
+import axios from 'axios';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -26,22 +27,34 @@ const style = {
 export default function TransitionsModal({
   open,
   setOpen,
+  area,
 }: {
   open: boolean;
   setOpen: any;
+  area: string;
 }) {
   const handleClose = () => setOpen(false);
 
   const [formData, setFormData] = useState({
-    mixer_1: '',
-    mixer_2: '',
-    mixer_3: '',
+    area: area,
+    id: '4',
+    mixer: ['', '', ''],
     start_time: null as Dayjs | null,
     end_time: null as Dayjs | null,
     cycle: '',
+    emergency: false,
   });
 
   const [responseMessage, setResponseMessage] = useState('');
+
+  const handleMixerChange = (index: number, value: string) => {
+    const newMixer = [...formData.mixer];
+    newMixer[index] = value;
+    setFormData({
+      ...formData,
+      mixer: newMixer,
+    });
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | Dayjs | null,
@@ -68,16 +81,27 @@ export default function TransitionsModal({
     }
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formattedData = {
       ...formData,
       start_time: formData.start_time
-        ? formData.start_time.format('HH:mm')
+        ? formData.start_time.format('DD/MM/YYYY HH:mm:ss')
         : '',
-      end_time: formData.end_time ? formData.end_time.format('HH:mm') : '',
+      end_time: formData.end_time
+        ? formData.end_time.format('DD/MM/YYYY HH:mm:ss')
+        : '',
     };
     console.log(formattedData);
+    try {
+      const response = await axios.post(
+        'http://127.0.0.1:8000/add_process',
+        formattedData
+      );
+      console.log('Response:', response.data);
+    } catch (error) {
+      console.error('Error posting data:', error);
+    }
   };
 
   return (
@@ -109,7 +133,7 @@ export default function TransitionsModal({
                   name="mixer_1"
                   onChange={(e) => {
                     checkNumber(e);
-                    handleChange(e);
+                    handleMixerChange(0, e.target.value);
                   }}
                 />
                 <TextField
@@ -119,7 +143,7 @@ export default function TransitionsModal({
                   name="mixer_2"
                   onChange={(e) => {
                     checkNumber(e);
-                    handleChange(e);
+                    handleMixerChange(1, e.target.value);
                   }}
                 />
                 <TextField
@@ -129,7 +153,7 @@ export default function TransitionsModal({
                   name="mixer_3"
                   onChange={(e) => {
                     checkNumber(e);
-                    handleChange(e);
+                    handleMixerChange(2, e.target.value);
                   }}
                 />
               </div>

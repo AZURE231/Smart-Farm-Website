@@ -28,7 +28,7 @@ export default function CycleCard({
       <Typography variant="body2" color="text.secondary">
         Cycle: {cycleDetails.cycle}
       </Typography>
-      <LinearProgressWithLabel />
+      {cycleDetails.isActive && <LinearProgressWithLabel />}
 
       <div className="absolute top-2 right-2">
         <button

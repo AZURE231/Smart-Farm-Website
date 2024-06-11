@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from gevent.pywsgi import WSGIServer
 from threading import Thread, Lock
 from process import WaterProcess, Capacity
@@ -6,6 +7,7 @@ import scheduler
 import datetime, time
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 TIMESTEP = datetime.time(second=1)
 TIME_FORMAT = "%d/%m/%Y %H:%M:%S"

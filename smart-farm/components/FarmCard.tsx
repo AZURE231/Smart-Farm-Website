@@ -17,24 +17,26 @@ export default function FarmCard({ farm }: { farm: IFarm }) {
   const handleInit = () => setOpen(true);
   return (
     <Card sx={{ maxWidth: 500 }}>
-      {/* <CardMedia
+      <CardMedia
         component="img"
         alt={farm.name}
         className="h-60 w-full object-cover"
         image={farm.image}
-      /> */}
+      />
       <CardContent>
-        {/* <Typography gutterBottom variant="h5" component="div">
+        <Typography gutterBottom variant="h5" component="div">
           {farm.name}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {farm.description}
-        </Typography> */}
+        </Typography>
         <Divider className="mt-5" />
-        {farm.process &&
-          farm.process.map((detail) => (
-            <CycleCard key={detail.id} cycleDetails={detail} />
-          ))}
+        <div className="max-h-64 overflow-y-auto">
+          {farm.process &&
+            farm.process.map((detail) => (
+              <CycleCard key={detail.id} cycleDetails={detail} />
+            ))}
+        </div>
       </CardContent>
       <CardActions>
         <Button size="small" onClick={handleInit}>
@@ -55,7 +57,7 @@ export default function FarmCard({ farm }: { farm: IFarm }) {
           </div>
         </Button>
         {/* {farm.details?.isActivated && <Progress />} */}
-        <FarmDetailModal open={open} setOpen={setOpen} />
+        <FarmDetailModal open={open} setOpen={setOpen} area={farm.area} />
       </CardActions>
     </Card>
   );
