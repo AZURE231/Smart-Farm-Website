@@ -13,10 +13,15 @@ export default function CycleCard({
     console.log('delete');
   };
   return (
-    <div className="relative mt-5 bg-gray-100 rounded-lg p-3">
-      <Typography variant="body2" color="text.secondary">
-        Date: {cycleDetails.date}
-      </Typography>
+    <div
+      className={`relative mt-5 ${
+        cycleDetails.isActive
+          ? 'bg-green-300'
+          : cycleDetails.isCompleted
+          ? 'bg-gray-300'
+          : 'bg-gray-100'
+      } rounded-lg p-3`}
+    >
       <Typography variant="body2" color="text.secondary">
         Time: {cycleDetails.start_time} - {cycleDetails.end_time}
       </Typography>
