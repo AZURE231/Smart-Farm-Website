@@ -1,0 +1,56 @@
+[
+    {
+      "id": 1,
+      "name": "Carot Farm",
+      "description": "BKU Carrot Farm thrives on fertile, well-drained loamy soil and a temperate climate, ideal for carrot cultivation. We utilize organic farming methods, including compost fertilization and drip irrigation, ensuring high-quality produce. Our sustainable practices, such as crop rotation and eco-friendly packaging, promote environmental stewardship while delivering fresh, delicious carrots to our customers.",
+      "image": "carot.jpg",
+      "details": [
+        {
+          "id": 1,
+          "mixer": [10, 20, 30],
+          "start_time": "11/06/2024 12:00:00",
+          "end_time": "11/06/2024 13:00:00",
+          "isActive": true,
+          "isCompleted": false,
+          "cycle": 1,
+          "emergency": false
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Letttuce Farm",
+      "description": "BKU Lettuce Farm flourishes with nutrient-rich, well-drained soil and a cool, temperate climate perfect for lettuce growth. We use organic farming methods, such as compost fertilization and efficient drip irrigation, to ensure crisp and healthy produce. Our commitment to sustainability includes crop rotation and eco-friendly packaging, providing fresh, delicious lettuce while protecting the environment.",
+      "image": "letttuce.jpg",
+      "details": [
+        {
+          "id": 2,
+          "mixer": [0, 20, 30],
+          "start_time": "11/06/2024 12:30:00",
+          "end_time": "11/06/2024 12:50:00",
+          "isActive": false,
+          "isCompleted": true,
+          "cycle": 1,
+          "emergency": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Tomato Farm",
+      "description": "Tomato Farm thrives on rich, well-drained soil and a warm, sunny climate ideal for tomato cultivation. We employ organic farming techniques, such as natural compost fertilization and drip irrigation, to ensure vibrant, juicy tomatoes. Our sustainable practices, including crop rotation and eco-friendly packaging, ensure we deliver fresh, flavorful tomatoes while protecting the environment.",
+      "image": "tomatoes.jpg",
+      "details": [
+        {
+          "id": 3,
+          "mixer": [10, 0, 20],
+          "start_time": "11/06/2024 14:30:00",
+          "end_time": "11/06/2024 14:50:00",
+          "isActive": false,
+          "isCompleted": false,
+          "cycle": 1,
+          "emergency": false
+        }
+      ]
+    }
+]
