@@ -55,7 +55,7 @@ export default function FarmCard({ farm }: { farm: IFarm }) {
           </div>
         </Button>
         {/* {farm.details?.isActivated && <Progress />} */}
-        <FarmDetailModal open={open} setOpen={setOpen} />
+        <FarmDetailModal open={open} setOpen={setOpen} area={farm.area} />
       </CardActions>
     </Card>
   );
