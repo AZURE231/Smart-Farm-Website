@@ -126,6 +126,7 @@ class WaterProcess(Process):
     def __dict__(self, time_format="%d/%m/%Y %H:%M:%S"):
         return {
             "id": self.id,
+            "emergency": True if self.priority == 0 else False,
             "start_time": self.start_time.strftime(time_format),
             "end_time": self.end_time.strftime(time_format),
             "isActive": self.isActive,

@@ -147,17 +147,23 @@ def update_process():
     """
     data = request.get_json()
     global process_list
-    _, process = find_process(process_list, data["id"])
-    assert process, "Process not found."
-    for key, value in data.items():
-        if key == "start_time" or key == "end_time":
-            setattr(process, key, datetime.datetime.strptime(value, TIME_FORMAT))
-        elif key == "emergency":
-            setattr(process, "priority", 0 if value else 1)
-        else:
-            setattr(process, key, value)
+    # If single update, convert to list
+    if not isinstance(data, list):
+        data = [data]
+    updated_process = []
+    for item in data:
+        _, process = find_process(process_list, item["id"])
+        assert process, "Process not found."
+        for key, value in item.items():
+            if key == "start_time" or key == "end_time":
+                setattr(process, key, datetime.datetime.strptime(value, TIME_FORMAT))
+            elif key == "emergency":
+                setattr(process, "priority", 0 if value else 1)
+            else:
+                setattr(process, key, value)
+        updated_process.append(process)
     scheduler.print_process_list(process_list)
-    return str(process)
+    return jsonify([process.__dict__() for process in updated_process])
 
 @app.route('/delete_process', methods=['POST'])
 def delete_process():
