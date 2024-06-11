@@ -8,8 +8,8 @@ import Typography from '@mui/material/Typography';
 import { TextField } from '@mui/material';
 import { Input } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers';
-import useForm from 'react-hook-form';
 import { useState } from 'react';
+import { Dayjs } from 'dayjs';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -33,18 +33,32 @@ export default function TransitionsModal({
   const handleClose = () => setOpen(false);
 
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
+    mixer_1: '',
+    mixer_2: '',
+    mixer_3: '',
+    start_time: null as Dayjs | null,
+    end_time: null as Dayjs | null,
+    cycle: '',
   });
 
   const [responseMessage, setResponseMessage] = useState('');
 
-  const handleChange = (e: any) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | Dayjs | null,
+    field?: string
+  ) => {
+    if (field) {
+      setFormData({
+        ...formData,
+        [field]: e,
+      });
+    } else if ('target' in e!) {
+      const { name, value } = e.target;
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const checkNumber = (e: any) => {
@@ -56,7 +70,14 @@ export default function TransitionsModal({
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    console.log('submit');
+    const formattedData = {
+      ...formData,
+      start_time: formData.start_time
+        ? formData.start_time.format('HH:mm')
+        : '',
+      end_time: formData.end_time ? formData.end_time.format('HH:mm') : '',
+    };
+    console.log(formattedData);
   };
 
   return (
@@ -85,50 +106,63 @@ export default function TransitionsModal({
                   id="mixer_1"
                   label="Mixer 1"
                   variant="outlined"
+                  name="mixer_1"
                   onChange={(e) => {
                     checkNumber(e);
+                    handleChange(e);
                   }}
                 />
                 <TextField
                   id="mixer_2"
                   label="Mixer 2"
                   variant="outlined"
+                  name="mixer_2"
                   onChange={(e) => {
                     checkNumber(e);
+                    handleChange(e);
                   }}
                 />
                 <TextField
                   id="mixer_3"
                   label="Mixer 3"
                   variant="outlined"
+                  name="mixer_3"
                   onChange={(e) => {
                     checkNumber(e);
+                    handleChange(e);
                   }}
                 />
               </div>
               <div className="mt-3 flex flex-row gap-2">
-                <TimePicker label="Start time" />
-                <TimePicker label="End time" />
+                <TimePicker
+                  label="Start time"
+                  onChange={(newValue) => handleChange(newValue, 'start_time')}
+                />
+                <TimePicker
+                  label="End time"
+                  onChange={(newValue) => handleChange(newValue, 'end_time')}
+                />
               </div>
               <label className="mr-2">Cycle: </label>
               <Input
                 type="number"
-                name="Cycle"
+                name="cycle"
                 className="w-10"
                 onChange={(e) => {
                   if (+e.target.value < 0) {
                     alert('Please enter a positive number');
                     e.target.value = '0';
                   }
+                  handleChange(e);
                 }}
               />
+              <div className="mt-5">
+                <Button onClick={handleClose}>Close</Button>
+                <Button type="submit" variant="contained">
+                  Save
+                </Button>
+              </div>
             </form>
-            <div className="mt-5">
-              <Button onClick={handleClose}>Close</Button>
-              <Button type="submit" variant="contained">
-                Save
-              </Button>
-            </div>
           </Box>
         </Fade>
       </Modal>
