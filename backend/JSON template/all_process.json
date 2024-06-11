@@ -1,0 +1,117 @@
+[
+    {
+        "area": 1,
+        "process": [
+            {
+                "area": 1,
+                "cycle": 0,
+                "emergency": false,
+                "end_time": "09/06/2024 09:40:00",
+                "id": 3,
+                "init_mixer": [
+                    100,
+                    200,
+                    300
+                ],
+                "isActive": false,
+                "isCompleted": false,
+                "mixer": [
+                    100,
+                    200,
+                    300
+                ],
+                "start_time": "09/06/2024 09:30:00"
+            },
+            {
+                "area": 1,
+                "cycle": 0,
+                "emergency": true,
+                "end_time": "09/06/2024 14:55:00",
+                "id": 5,
+                "init_mixer": [
+                    0,
+                    200,
+                    100
+                ],
+                "isActive": false,
+                "isCompleted": false,
+                "mixer": [
+                    0,
+                    200,
+                    100
+                ],
+                "start_time": "09/06/2024 14:41:00"
+            }
+        ]
+    },
+    {
+        "area": 2,
+        "process": [
+            {
+                "area": 2,
+                "cycle": 0,
+                "emergency": false,
+                "end_time": "09/06/2024 15:40:00",
+                "id": 4,
+                "init_mixer": [
+                    200,
+                    0,
+                    200
+                ],
+                "isActive": false,
+                "isCompleted": false,
+                "mixer": [
+                    200,
+                    0,
+                    200
+                ],
+                "start_time": "09/06/2024 14:30:00"
+            }
+        ]
+    },
+    {
+        "area": 3,
+        "process": [
+            {
+                "area": 3,
+                "cycle": 0,
+                "emergency": false,
+                "end_time": "09/06/2024 12:55:00",
+                "id": 1,
+                "init_mixer": [
+                    0,
+                    100,
+                    100
+                ],
+                "isActive": false,
+                "isCompleted": false,
+                "mixer": [
+                    0,
+                    100,
+                    100
+                ],
+                "start_time": "09/06/2024 12:40:00"
+            },
+            {
+                "area": 3,
+                "cycle": 0,
+                "emergency": true,
+                "end_time": "09/06/2024 12:40:00",
+                "id": 2,
+                "init_mixer": [
+                    200,
+                    150,
+                    100
+                ],
+                "isActive": false,
+                "isCompleted": false,
+                "mixer": [
+                    80,
+                    60.0,
+                    40.0
+                ],
+                "start_time": "09/06/2024 12:30:00"
+            }
+        ]
+    }
+]
