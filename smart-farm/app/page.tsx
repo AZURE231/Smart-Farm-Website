@@ -10,21 +10,21 @@ const farms_description = [
     area: '1',
     name: 'Carrot Farm',
     description:
-      'BKU Carrot Farm thrives on fertile, well-drained loamy soil and a temperate climate, ideal for carrot cultivation. We utilize organic farming methods, including compost fertilization and drip irrigation, ensuring high-quality produce.',
+      'BKU Carrot Farm thrives on fertile, well-drained loamy soil and a temperate climate, ideal for carrot cultivation.',
     image: 'carot.jpg',
   },
   {
     area: '2',
     name: 'Lettuce Farm',
     description:
-      'BKU Lettuce Farm flourishes with nutrient-rich, well-drained soil and a cool, temperate climate perfect for lettuce growth. We use organic farming methods, such as compost fertilization and efficient drip irrigation, to ensure crisp and healthy produce.',
+      'BKU Lettuce Farm flourishes with nutrient-rich, well-drained soil and a cool, temperate climate perfect for lettuce growth.',
     image: 'lettuce.jpg',
   },
   {
     area: '3',
     name: 'Tomato Farm',
     description:
-      'Tomato Farm thrives on rich, well-drained soil and a warm, sunny climate ideal for tomato cultivation. We employ organic farming techniques, such as natural compost fertilization and drip irrigation, to ensure vibrant, juicy tomatoes.',
+      'Tomato Farm thrives on rich, well-drained soil and a warm, sunny climate ideal for tomato cultivation.',
     image: 'tomatoes.jpg',
   },
 ];

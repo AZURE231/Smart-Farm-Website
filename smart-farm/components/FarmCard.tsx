@@ -31,10 +31,12 @@ export default function FarmCard({ farm }: { farm: IFarm }) {
           {farm.description}
         </Typography>
         <Divider className="mt-5" />
-        {farm.process &&
-          farm.process.map((detail) => (
-            <CycleCard key={detail.id} cycleDetails={detail} />
-          ))}
+        <div className="max-h-64 overflow-y-auto">
+          {farm.process &&
+            farm.process.map((detail) => (
+              <CycleCard key={detail.id} cycleDetails={detail} />
+            ))}
+        </div>
       </CardContent>
       <CardActions>
         <Button size="small" onClick={handleInit}>
