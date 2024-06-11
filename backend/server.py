@@ -7,7 +7,7 @@ import datetime, time
 
 app = Flask(__name__)
 
-TIMESTEP = datetime.time(second=10)
+TIMESTEP = datetime.time(second=1)
 TIME_FORMAT = "%d/%m/%Y %H:%M:%S"
 NUM_MIXERS = 3
 CAPACITY = Capacity(mixer=[20, 20, 20], n_mixers=NUM_MIXERS, time_step=TIMESTEP)
@@ -72,14 +72,19 @@ def background_task():
     global process_list, complete_process, updated_process
     updated_process = None
     counter = 0
+    all_complete = False
     while True:
         time.sleep(1)
         counter -= 1
         # All process completed
         # scheduler.print_process_list(process_list)
         if not process_list:
-            print("All process completed.")
-            break
+            if not all_complete:
+                print("All process completed.")
+                all_complete = True
+            continue
+        else:
+            all_complete = False
         if counter <= 0:
             # Reset counter
             counter = int(TIMESTEP.second)
@@ -162,7 +167,6 @@ def delete_process():
     """
     data = request.get_json()
     global process_list
-    print(data["id"])
     index, _ = find_process(process_list, data["id"])
     if not index:
         return "Process not found."
@@ -188,7 +192,7 @@ def send_process_list():
     :return:    JSON, the process queue.
     """
     global process_list
-    return jsonify([process.__dict__(TIME_FORMAT) for process in process_list])
+    return jsonify([get_area_dict(process_list, area) for area in range(1, 4)])
 
 @app.route('/complete_process_list', methods=["GET"])
 def send_complete_list():
@@ -197,7 +201,12 @@ def send_complete_list():
     :return:    JSON, the completed process list.
     """
     global complete_process
-    return jsonify([process.__dict__(TIME_FORMAT) for process in complete_process])
+    # return jsonify([process.__dict__(TIME_FORMAT)
+    #                 for area in range(1, 4)
+    #                 for process in get_area_list(complete_process, area)])
+    return jsonify([get_area_dict(complete_process, area) for area in range(1, 4)])
+
+
 
 def get_cycle(ctx: list[WaterProcess], area):
     cycle = 0
@@ -206,11 +215,18 @@ def get_cycle(ctx: list[WaterProcess], area):
             cycle += 1
     return cycle + 1
 
+def get_area_dict(ctx: list[WaterProcess], area):
+    area_dict = {}
+    area_dict["area"] = area
+    area_dict["process"] = [process.__dict__(TIME_FORMAT) for process in ctx if process.area == area]
+    return area_dict
+
 def find_process(ctx: list[WaterProcess], id):
     for i in range(len(ctx)):
         if ctx[i].id == id:
             return i, ctx[i]
     return None, None
+
 
 
 if __name__ == '__main__':

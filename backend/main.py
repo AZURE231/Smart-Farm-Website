@@ -88,6 +88,7 @@ complete_process = []
 TIMESTEP = datetime.time(second=1)
 CAPACITY = Capacity(mixer=[20, 20, 20], n_mixers=3, time_step=TIMESTEP)
 counter = 0
+all_complete = False
 
 # Start loop
 # Sort process list with arrival time
@@ -101,9 +102,11 @@ while True:
     time.sleep(1)
     counter -= 1
     # Complete all process
-    if not process_list:
+    if not process_list and not all_complete:
         print("All process completed.")
-        break
+        all_complete = True
+    else:
+        all_complete = False
     if counter <= 0:
         # Reset counter
         counter = int(TIMESTEP.second)
