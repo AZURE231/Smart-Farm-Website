@@ -194,19 +194,24 @@ def send_process_list():
     global process_list
     return jsonify([get_area_dict(process_list, area) for area in range(1, 4)])
 
-@app.route('/complete_process_list', methods=["GET"])
-def send_complete_list():
+@app.route('/completed_process_list', methods=["GET"])
+def send_completed_list():
     """
     REST API to send the completed process list via GET.
     :return:    JSON, the completed process list.
     """
     global complete_process
-    # return jsonify([process.__dict__(TIME_FORMAT)
-    #                 for area in range(1, 4)
-    #                 for process in get_area_list(complete_process, area)])
     return jsonify([get_area_dict(complete_process, area) for area in range(1, 4)])
 
-
+@app.route('/all_process', methods=["GET"])
+def send_all_process():
+    """
+    REST API to send all process data via GET.
+    :return:    JSON, all process data.
+    """
+    global process_list, complete_process
+    return jsonify([get_area_dict(process_list + complete_process, area) for area in range(1, 4)]
+    )
 
 def get_cycle(ctx: list[WaterProcess], area):
     cycle = 0

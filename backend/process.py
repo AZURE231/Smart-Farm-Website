@@ -66,6 +66,7 @@ class WaterProcess(Process):
         self.start_time = start_time
         self.end_time = end_time
         self.isActive = isActive
+        self.isCompleted = False
         self.cycle = cycle
         self.defined_mixer = mixer
 
@@ -112,6 +113,7 @@ class WaterProcess(Process):
             f"Start time: {str(self.start_time)}\n" \
             f"End time: {str(self.end_time)}\n" \
             f"isActive: {self.isActive}\n" \
+            f"isCompleted: {self.isCompleted}\n" \
             f"Area: {self.area}\n"
         for i in range(self.n_mixers):
             s += f"Mixer {i+1}: {self.mixer[i]}\n"
@@ -127,6 +129,7 @@ class WaterProcess(Process):
             "start_time": self.start_time.strftime(time_format),
             "end_time": self.end_time.strftime(time_format),
             "isActive": self.isActive,
+            "isCompleted": self.isCompleted,
             "area": self.area,
             "mixer": self.mixer,
             "init_mixer": self.defined_mixer,

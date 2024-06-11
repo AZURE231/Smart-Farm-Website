@@ -51,6 +51,7 @@ def update_process(process: WaterProcess, mixer: list[float]):
     for item in process.mixer:
         if item > 0:
             return False
+    process.isCompleted = True
     return True
 
 
