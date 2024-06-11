@@ -1,10 +1,17 @@
+import signal, sys
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from gevent.pywsgi import WSGIServer
-from threading import Thread, Lock
+from threading import Thread, Lock, Event
 from process import WaterProcess, Capacity
 import scheduler
 import datetime, time
+from mqtt import MQTTHelper
+from device import Devices
+import json, ast
+
+mqttClient = MQTTHelper()
+devices = Devices()
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
@@ -18,38 +25,52 @@ CAPACITY = Capacity(mixer=[20, 20, 20], n_mixers=NUM_MIXERS, time_step=TIMESTEP)
 process_list = [
     WaterProcess(
         id=1,
-        mixer=[0, 100, 100], n_mixers=3, area=3,
+        mixer=[0, 100, 100],
+        n_mixers=3,
+        area=3,
         start_time=datetime.datetime(2024, 6, 9, 12, 40),
         end_time=datetime.datetime(2024, 6, 9, 12, 55),
-        priority=1, cycle=2
+        priority=1,
+        cycle=2,
     ),
     WaterProcess(
         id=2,
-        mixer=[200, 150, 100], n_mixers=3, area=3,
+        mixer=[200, 150, 100],
+        n_mixers=3,
+        area=3,
         start_time=datetime.datetime(2024, 6, 9, 12, 30),
         end_time=datetime.datetime(2024, 6, 9, 12, 40),
-        priority=0, cycle=1
+        priority=0,
+        cycle=1,
     ),
     WaterProcess(
         id=3,
-        mixer=[100, 200, 300], n_mixers=3, area=1,
+        mixer=[100, 200, 300],
+        n_mixers=3,
+        area=1,
         start_time=datetime.datetime(2024, 6, 9, 9, 30),
         end_time=datetime.datetime(2024, 6, 9, 9, 40),
-        cycle=1
+        cycle=1,
     ),
     WaterProcess(
         id=4,
-        mixer=[200, 0, 200], n_mixers=3, area=2,
+        mixer=[200, 0, 200],
+        n_mixers=3,
+        area=2,
         start_time=datetime.datetime(2024, 6, 9, 14, 30),
         end_time=datetime.datetime(2024, 6, 9, 15, 40),
-        priority=1, cycle=1
+        priority=1,
+        cycle=1,
     ),
     WaterProcess(
         id=5,
-        mixer=[0, 200, 100], n_mixers=3, area=1,
+        mixer=[0, 200, 100],
+        n_mixers=3,
+        area=1,
         start_time=datetime.datetime(2024, 6, 9, 14, 41),
         end_time=datetime.datetime(2024, 6, 9, 14, 55),
-        priority=0, cycle=2
+        priority=0,
+        cycle=2,
     ),
 ]
 complete_process = []
@@ -63,7 +84,7 @@ updated_process = WaterProcess(
     area=1,
     priority=1,
     isActive=False,
-    cycle=0
+    cycle=0,
 )
 
 
@@ -76,7 +97,7 @@ def background_task():
     select_index, select_process = None, None
     counter = 0
     all_complete = False
-    while True:
+    while not stop_event.is_set():
         time.sleep(1)
         counter -= 1
         # All process completed
@@ -113,14 +134,24 @@ def background_task():
             # ======= YOUR CODE END HERE =======
 
 
+def logic():
+    while not stop_event.is_set():
+        message = mqttClient.get_payload()
+        if message != "":
+            add_process(message.replace("true", "True").replace("false", "False").replace("null", "None"))
 
-@app.route('/add_process', methods=['POST'])
-def add_process():
+        # time.sleep(2)
+
+
+@app.route("/add_process", methods=["POST"])
+def add_process(message):
     """
     REST API to add a new process from client via POST to the process list.
     :return:    str, the new process.
     """
-    data = request.get_json()
+    # data = request.get_json()
+    data = ast.literal_eval(message)
+    # print(data["mixer"])
     # return jsonify(data)
 
     global process_list, complete_process
@@ -138,15 +169,16 @@ def add_process():
     )
     process_list.append(process)
     scheduler.print_process_list(process_list)
-    return jsonify(process.__dict__(TIME_FORMAT))
+    # return jsonify(process.__dict__(TIME_FORMAT))
 
-@app.route('/update_process', methods=['POST'])
+
+@app.route("/update_process", methods=["POST"])
 def update_process():
     """
     REST API to update process from client via POST.
     :return:    str, the updated process.
     """
-    data = request.get_json()
+    # data = request.get_json()
     global process_list, complete_process
     # If single update, convert to list
     if not isinstance(data, list):
@@ -179,7 +211,8 @@ def update_process():
     scheduler.print_process_list(process_list)
     return jsonify([process.__dict__() for process in updated_process_list])
 
-@app.route('/delete_process', methods=['POST'])
+
+@app.route("/delete_process", methods=["POST"])
 def delete_process():
     """
     REST API to delete process from client via POST.
@@ -199,7 +232,8 @@ def delete_process():
     scheduler.print_process_list(process_list)
     return jsonify({"deleted": True})
 
-@app.route('/process_data', methods=["GET"])
+
+@app.route("/process_data", methods=["GET"])
 def send_process_data():
     """
     REST API to send the updated process data via GET.
@@ -210,7 +244,8 @@ def send_process_data():
         return jsonify(updated_process.__dict__(TIME_FORMAT))
     return jsonify({})
 
-@app.route('/process_list', methods=["GET"])
+
+@app.route("/process_list", methods=["GET"])
 def send_process_list():
     """
     REST API to send the process queue via GET.
@@ -219,7 +254,8 @@ def send_process_list():
     global process_list
     return jsonify([get_area_dict(process_list, area) for area in range(1, 4)])
 
-@app.route('/completed_process_list', methods=["GET"])
+
+@app.route("/completed_process_list", methods=["GET"])
 def send_completed_list():
     """
     REST API to send the completed process list via GET.
@@ -228,15 +264,16 @@ def send_completed_list():
     global complete_process
     return jsonify([get_area_dict(complete_process, area) for area in range(1, 4)])
 
-@app.route('/all_process', methods=["GET"])
+
+@app.route("/all_process", methods=["GET"])
 def send_all_process():
     """
     REST API to send all process data via GET.
     :return:    JSON, all process data.
     """
     global process_list, complete_process
-    return jsonify([get_area_dict(process_list + complete_process, area) for area in range(1, 4)]
-    )
+    return jsonify([get_area_dict(process_list + complete_process, area) for area in range(1, 4)])
+
 
 def get_cycle(ctx: list[WaterProcess], area):
     cycle = 0
@@ -245,11 +282,13 @@ def get_cycle(ctx: list[WaterProcess], area):
             cycle += 1
     return cycle + 1
 
+
 def get_area_dict(ctx: list[WaterProcess], area):
     area_dict = {}
     area_dict["area"] = area
     area_dict["process"] = [process.__dict__(TIME_FORMAT) for process in ctx if process.area == area]
     return area_dict
+
 
 def find_process(ctx: list[WaterProcess], id):
     for i in range(len(ctx)):
@@ -257,17 +296,45 @@ def find_process(ctx: list[WaterProcess], id):
             return i, ctx[i]
     return None, None
 
+
 def get_new_id(ctx: [WaterProcess]):
     if not ctx:
         return 1
     return max([process.id for process in ctx]) + 1
 
-if __name__ == '__main__':
-    thread = Thread(target=background_task)
-    thread.start()
+
+stop_event = Event()
+
+
+def signal_handler(sig, frame):
+    print("Received SIGINT (Ctrl+C). Stopping the threads...")
+    stop_event.set()
+
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)
+
+    thread1 = Thread(target=background_task)
+    thread2 = Thread(target=logic)
+    thread1.start()
+    thread2.start()
+
+    try:
+        # Keep the main thread running, waiting for Ctrl+C
+        while not stop_event.is_set():
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        pass
+
+    # Wait for the threads to finish
+    thread1.join()
+    thread2.join()
+
+    print("Threads have stopped.")
+    print("Main program is exiting.")
+    sys.exit(0)
     # Debug/Development
     # app.run(debug=True, host="0.0.0.0", port="5000")
     # Production
-    http_server = WSGIServer(("127.0.0.1", 8000), app)
-    http_server.serve_forever()
-
+    # http_server = WSGIServer(("127.0.0.1", 8000), app)
+    # http_server.serve_forever()

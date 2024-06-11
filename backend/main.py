@@ -1,50 +1,13 @@
 import sys
-from Adafruit_IO import MQTTClient
-import time
 import datetime
+import time
+import random
+from mqtt import MQTTHelper
 from process import WaterProcess, Capacity
 import scheduler
+from device import Devices
 
-AIO_USERNAME = "Dat_iot"
-AIO_KEY = "aio_VZDo46c1MmWIEhVzEajdlsOjTKZA"
-BUTTONS = ["button1", "button2"]
-SENSORS = [f"sensor{x}" for x in range(1,3)]
-
-
-def connected(client):
-    print("Connect successfully ...")
-    for feed in BUTTONS:
-        client.subscribe(feed)
-
-def subscribe(client , userdata , mid , granted_qos):
-    print("Subscribe successfully ...")
-
-def disconnected(client):
-    print("Disconnected ...")
-    sys.exit (1)
-
-def message(client , feed_id , payload):
-    print(format(f"Received: feed id: {feed_id} {payload}"))
-    # if feed_id == BUTTONS[0]:
-    #     if payload == "0":
-    #         writeSerial(0)
-    #     else:
-    #         writeSerial(1)
-    # elif feed_id == BUTTONS[1]:
-    #     if payload == "0":
-    #         writeSerial(0)
-    #     else:
-    #         writeSerial(1)
-
-
-client = MQTTClient(AIO_USERNAME , AIO_KEY)
-client.on_connect = connected
-client.on_disconnect = disconnected
-client.on_message = message
-client.on_subscribe = subscribe
-client.connect()
-client.loop_background()
-
+mqttClient = MQTTHelper()
 
 process_list = [
     WaterProcess(
@@ -92,11 +55,13 @@ all_complete = False
 
 # Start loop
 # Sort process list with arrival time
-# Select the  highest priority process which has arrived
+# Select the highest priority process which has arrived
 # End loop if complete all the process
 # Update the selected process response time, remaining time
 # Update current Time
 # Update completion time if remaining time = 0
+
+devices = Devices()
 
 while True:
     time.sleep(1)
@@ -123,7 +88,6 @@ while True:
         # ======= YOUR CODE START HERE =======
 
 
-
         # ======= YOUR CODE END HERE =======
 
         # Process terminated successfully
@@ -136,4 +100,4 @@ while True:
 
 
 
-    # readSerial(client)
+# readSerial(client)
