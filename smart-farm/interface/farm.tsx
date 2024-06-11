@@ -1,5 +1,8 @@
 export interface IFarm {
   area: string;
+  name: string;
+  description: string;
+  image: string;
   process: IFarmDetail[];
 }
 

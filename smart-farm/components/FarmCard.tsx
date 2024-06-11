@@ -17,19 +17,19 @@ export default function FarmCard({ farm }: { farm: IFarm }) {
   const handleInit = () => setOpen(true);
   return (
     <Card sx={{ maxWidth: 500 }}>
-      {/* <CardMedia
+      <CardMedia
         component="img"
         alt={farm.name}
         className="h-60 w-full object-cover"
         image={farm.image}
-      /> */}
+      />
       <CardContent>
-        {/* <Typography gutterBottom variant="h5" component="div">
+        <Typography gutterBottom variant="h5" component="div">
           {farm.name}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {farm.description}
-        </Typography> */}
+        </Typography>
         <Divider className="mt-5" />
         {farm.process &&
           farm.process.map((detail) => (
