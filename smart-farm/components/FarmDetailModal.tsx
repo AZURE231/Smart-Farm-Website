@@ -9,6 +9,7 @@ import { TextField } from '@mui/material';
 import { Input } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers';
 import useForm from 'react-hook-form';
+import { useState } from 'react';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -31,11 +32,31 @@ export default function TransitionsModal({
 }) {
   const handleClose = () => setOpen(false);
 
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+  });
+
+  const [responseMessage, setResponseMessage] = useState('');
+
+  const handleChange = (e: any) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
   const checkNumber = (e: any) => {
     if (isNaN(+e.target.value)) {
       alert('Please enter a number');
       e.target.value = '';
     }
+  };
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    console.log('submit');
   };
 
   return (
@@ -58,7 +79,7 @@ export default function TransitionsModal({
             <Typography id="transition-modal-title" variant="h6" component="h2">
               Configuration
             </Typography>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="flex flex-row gap-2">
                 <TextField
                   id="mixer_1"

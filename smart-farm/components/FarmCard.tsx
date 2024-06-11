@@ -17,28 +17,28 @@ export default function FarmCard({ farm }: { farm: IFarm }) {
   const handleInit = () => setOpen(true);
   return (
     <Card sx={{ maxWidth: 500 }}>
-      <CardMedia
+      {/* <CardMedia
         component="img"
         alt={farm.name}
         className="h-60 w-full object-cover"
         image={farm.image}
-      />
+      /> */}
       <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
+        {/* <Typography gutterBottom variant="h5" component="div">
           {farm.name}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {farm.description}
-        </Typography>
+        </Typography> */}
         <Divider className="mt-5" />
-        {farm.details &&
-          farm.details.map((detail) => (
+        {farm.process &&
+          farm.process.map((detail) => (
             <CycleCard key={detail.id} cycleDetails={detail} />
           ))}
       </CardContent>
       <CardActions>
         <Button size="small" onClick={handleInit}>
-          <Fab color="success" aria-label="add" size="medium">
+          <div className="bg-green-600 rounded-full p-1">
             <SvgIcon>
               {/* credit: plus icon from https://heroicons.com/ */}
               <svg
@@ -52,7 +52,7 @@ export default function FarmCard({ farm }: { farm: IFarm }) {
                 <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
               </svg>
             </SvgIcon>
-          </Fab>
+          </div>
         </Button>
         {/* {farm.details?.isActivated && <Progress />} */}
         <FarmDetailModal open={open} setOpen={setOpen} />
