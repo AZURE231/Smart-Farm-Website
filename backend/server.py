@@ -70,7 +70,7 @@ def background_task():
     :return:
     """
     global process_list, complete_process, updated_process
-    updated_process = None
+    select_index, select_process = None, None
     counter = 0
     all_complete = False
     while True:
@@ -78,17 +78,24 @@ def background_task():
         counter -= 1
         # All process completed
         # scheduler.print_process_list(process_list)
-        if not process_list:
-            if not all_complete:
-                print("All process completed.")
-                all_complete = True
-            continue
-        else:
-            all_complete = False
         if counter <= 0:
             # Reset counter
             counter = int(TIMESTEP.second)
-            # process_list = scheduler.sort_by_time(process_list)
+            if not process_list:
+                if not all_complete:
+                    print("All process completed.")
+                    all_complete = True
+                continue
+            # Update process in previous step
+            if select_process:
+                updated_process = process_list[select_index]
+                # Process terminated successfully
+                if scheduler.update_process(process_list[select_index], select_process.mixer):
+                    complete_process.append(process_list.pop(select_index))
+                print("___________________\nComplete process: ", len(complete_process))
+            # Update to client
+            all_complete = False
+            process_list = scheduler.sort_by_time(process_list)
             select_index, select_process = scheduler.select_process(process_list, TIMESTEP, CAPACITY)
             if not select_process:
                 print("No process selected.")
@@ -102,12 +109,6 @@ def background_task():
 
             # ======= YOUR CODE END HERE =======
 
-            # Process terminated successfully
-            updated_process = process_list[select_index]
-            if scheduler.update_process(process_list[select_index], MIXER):
-                complete_process.append(process_list.pop(select_index))
-            print("___________________\nComplete process: ", len(complete_process))
-            # Update to client
 
 
 @app.route('/add_process', methods=['POST'])
