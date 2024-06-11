@@ -1,11 +1,16 @@
 [
-  {
-    "id": 5,
-    "mixer": [100, 200, 300]
-  },
-  {
-    "id": 1,
-    "emergency": false,
-    "start_time": "10/06/2024 10:10:00"
-  }
+    {
+        "id": 5,
+        "mixer": [100, 200, 300]
+    },
+    {
+        "id": 1,
+        "emergency": false,
+        "start_time": "10/06/2024 10:10:00"
+    },
+        {
+        "id": 4,
+        "emergency": false,
+        "end_time": "11/06/2024 23:10:00"
+    }
 ]

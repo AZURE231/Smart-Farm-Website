@@ -4,27 +4,7 @@
         "process": [
             {
                 "area": 1,
-                "cycle": 0,
-                "emergency": false,
-                "end_time": "09/06/2024 09:40:00",
-                "id": 3,
-                "init_mixer": [
-                    100,
-                    200,
-                    300
-                ],
-                "isActive": false,
-                "isCompleted": false,
-                "mixer": [
-                    100,
-                    200,
-                    300
-                ],
-                "start_time": "09/06/2024 09:30:00"
-            },
-            {
-                "area": 1,
-                "cycle": 0,
+                "cycle": 2,
                 "emergency": true,
                 "end_time": "09/06/2024 14:55:00",
                 "id": 5,
@@ -34,13 +14,33 @@
                     100
                 ],
                 "isActive": false,
-                "isCompleted": false,
+                "isCompleted": true,
                 "mixer": [
+                    0.0,
                     0,
-                    200,
-                    100
+                    0.0
                 ],
                 "start_time": "09/06/2024 14:41:00"
+            },
+            {
+                "area": 1,
+                "cycle": 1,
+                "emergency": false,
+                "end_time": "09/06/2024 09:40:00",
+                "id": 3,
+                "init_mixer": [
+                    100,
+                    200,
+                    300
+                ],
+                "isActive": false,
+                "isCompleted": true,
+                "mixer": [
+                    0.0,
+                    0.0,
+                    0
+                ],
+                "start_time": "09/06/2024 09:30:00"
             }
         ]
     },
@@ -49,7 +49,7 @@
         "process": [
             {
                 "area": 2,
-                "cycle": 0,
+                "cycle": 1,
                 "emergency": false,
                 "end_time": "09/06/2024 15:40:00",
                 "id": 4,
@@ -59,11 +59,11 @@
                     200
                 ],
                 "isActive": false,
-                "isCompleted": false,
+                "isCompleted": true,
                 "mixer": [
-                    200,
                     0,
-                    200
+                    0.0,
+                    0.0
                 ],
                 "start_time": "09/06/2024 14:30:00"
             }
@@ -74,7 +74,27 @@
         "process": [
             {
                 "area": 3,
-                "cycle": 0,
+                "cycle": 3,
+                "emergency": true,
+                "end_time": "10/06/2024 10:15:00",
+                "id": 6,
+                "init_mixer": [
+                    0,
+                    200,
+                    300
+                ],
+                "isActive": false,
+                "isCompleted": true,
+                "mixer": [
+                    0.0,
+                    0.0,
+                    0
+                ],
+                "start_time": "10/06/2024 10:00:00"
+            },
+            {
+                "area": 3,
+                "cycle": 2,
                 "emergency": false,
                 "end_time": "09/06/2024 12:55:00",
                 "id": 1,
@@ -84,33 +104,13 @@
                     100
                 ],
                 "isActive": false,
-                "isCompleted": false,
+                "isCompleted": true,
                 "mixer": [
+                    0.0,
                     0,
-                    100,
-                    100
+                    0.0
                 ],
                 "start_time": "09/06/2024 12:40:00"
-            },
-            {
-                "area": 3,
-                "cycle": 0,
-                "emergency": true,
-                "end_time": "09/06/2024 12:40:00",
-                "id": 2,
-                "init_mixer": [
-                    200,
-                    150,
-                    100
-                ],
-                "isActive": false,
-                "isCompleted": false,
-                "mixer": [
-                    80,
-                    60.0,
-                    40.0
-                ],
-                "start_time": "09/06/2024 12:30:00"
             }
         ]
     }

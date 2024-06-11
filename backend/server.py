@@ -19,34 +19,35 @@ process_list = [
         mixer=[0, 100, 100], n_mixers=3, area=3,
         start_time=datetime.datetime(2024, 6, 9, 12, 40),
         end_time=datetime.datetime(2024, 6, 9, 12, 55),
-        priority=1
+        priority=1, cycle=2
     ),
     WaterProcess(
         id=2,
         mixer=[200, 150, 100], n_mixers=3, area=3,
         start_time=datetime.datetime(2024, 6, 9, 12, 30),
         end_time=datetime.datetime(2024, 6, 9, 12, 40),
-        priority=0,
+        priority=0, cycle=1
     ),
     WaterProcess(
         id=3,
         mixer=[100, 200, 300], n_mixers=3, area=1,
         start_time=datetime.datetime(2024, 6, 9, 9, 30),
         end_time=datetime.datetime(2024, 6, 9, 9, 40),
+        cycle=1
     ),
     WaterProcess(
         id=4,
         mixer=[200, 0, 200], n_mixers=3, area=2,
         start_time=datetime.datetime(2024, 6, 9, 14, 30),
         end_time=datetime.datetime(2024, 6, 9, 15, 40),
-        priority=1,
+        priority=1, cycle=1
     ),
     WaterProcess(
         id=5,
         mixer=[0, 200, 100], n_mixers=3, area=1,
         start_time=datetime.datetime(2024, 6, 9, 14, 41),
         end_time=datetime.datetime(2024, 6, 9, 14, 55),
-        priority=0,
+        priority=0, cycle=2
     ),
 ]
 complete_process = []
@@ -120,14 +121,11 @@ def add_process():
     data = request.get_json()
     # return jsonify(data)
 
-    global process_list
+    global process_list, complete_process
 
     # Remove process with the same id in queue.
-    _, prev_process = find_process(process_list, data["id"])
-    if prev_process:
-        process_list.remove(prev_process)
     process = WaterProcess(
-        id=data["id"],
+        id=get_new_id(process_list + complete_process),
         start_time=datetime.datetime.strptime(data["start_time"], TIME_FORMAT),
         end_time=datetime.datetime.strptime(data["end_time"], TIME_FORMAT),
         mixer=data["mixer"],
@@ -138,7 +136,7 @@ def add_process():
     )
     process_list.append(process)
     scheduler.print_process_list(process_list)
-    return str(process)
+    return jsonify(process.__dict__(TIME_FORMAT))
 
 @app.route('/update_process', methods=['POST'])
 def update_process():
@@ -147,14 +145,17 @@ def update_process():
     :return:    str, the updated process.
     """
     data = request.get_json()
-    global process_list
+    global process_list, complete_process
     # If single update, convert to list
     if not isinstance(data, list):
         data = [data]
-    updated_process = []
+    updated_process_list = []
     for item in data:
-        _, process = find_process(process_list, item["id"])
+        complete_index, process = find_process(complete_process, item["id"])
+        if complete_index is None:
+            _, process = find_process(process_list, item["id"])
         assert process, "Process not found."
+        prev_area = process.area
         for key, value in item.items():
             if key == "start_time" or key == "end_time":
                 setattr(process, key, datetime.datetime.strptime(value, TIME_FORMAT))
@@ -162,9 +163,19 @@ def update_process():
                 setattr(process, "priority", 0 if value else 1)
             else:
                 setattr(process, key, value)
-        updated_process.append(process)
+
+        if complete_index is not None:
+            # Update process
+            if not scheduler.update_process(process, [0 for _ in range(NUM_MIXERS)]):
+                complete_process.pop(complete_index)
+                process_list.append(process)
+            elif datetime.datetime.now() < process.end_time or process.area != prev_area:
+                process.mixer = process.defined_mixer
+                complete_process.pop(complete_index)
+                process_list.append(process)
+        updated_process_list.append(process)
     scheduler.print_process_list(process_list)
-    return jsonify([process.__dict__() for process in updated_process])
+    return jsonify([process.__dict__() for process in updated_process_list])
 
 @app.route('/delete_process', methods=['POST'])
 def delete_process():
@@ -173,13 +184,18 @@ def delete_process():
     :return:    str, notify the process is deleted.
     """
     data = request.get_json()
-    global process_list
-    index, _ = find_process(process_list, data["id"])
-    if not index:
-        return "Process not found."
-    process_list.pop(index)
+    global process_list, complete_process
+    index, _ = find_process(complete_process, data["id"])
+    if index is not None:
+        del complete_process[index]
+        return jsonify({"deleted": True})
+    else:
+        index, _ = find_process(process_list, data["id"])
+        if index is None:
+            return jsonify({"deleted": False})
+        del process_list[index]
     scheduler.print_process_list(process_list)
-    return "Process deleted."
+    return jsonify({"deleted": True})
 
 @app.route('/process_data', methods=["GET"])
 def send_process_data():
@@ -239,7 +255,10 @@ def find_process(ctx: list[WaterProcess], id):
             return i, ctx[i]
     return None, None
 
-
+def get_new_id(ctx: [WaterProcess]):
+    if not ctx:
+        return 1
+    return max([process.id for process in ctx]) + 1
 
 if __name__ == '__main__':
     thread = Thread(target=background_task)
