@@ -65,6 +65,10 @@ updated_process = WaterProcess(
 
 
 def background_task():
+    """
+    Background task to schedule, terminate and update process.
+    :return:
+    """
     global process_list, complete_process, updated_process
     updated_process = None
     counter = 0
@@ -103,6 +107,10 @@ def background_task():
 
 @app.route('/add_process', methods=['POST'])
 def add_process():
+    """
+    REST API to add a new process from client via POST to the process list.
+    :return:    str, the new process.
+    """
     data = request.get_json()
     # return jsonify(data)
 
@@ -128,6 +136,10 @@ def add_process():
 
 @app.route('/update_process', methods=['POST'])
 def update_process():
+    """
+    REST API to update process from client via POST.
+    :return:    str, the updated process.
+    """
     data = request.get_json()
     global process_list
     _, process = find_process(process_list, data["id"])
@@ -144,17 +156,26 @@ def update_process():
 
 @app.route('/delete_process', methods=['POST'])
 def delete_process():
+    """
+    REST API to delete process from client via POST.
+    :return:    str, notify the process is deleted.
+    """
     data = request.get_json()
     global process_list
     print(data["id"])
     index, _ = find_process(process_list, data["id"])
-    assert index is not None, "Process not found."
+    if not index:
+        return "Process not found."
     process_list.pop(index)
     scheduler.print_process_list(process_list)
     return "Process deleted."
 
 @app.route('/process_data', methods=["GET"])
 def send_process_data():
+    """
+    REST API to send the updated process data via GET.
+    :return:    JSON, the updated process data.
+    """
     global updated_process
     if updated_process:
         return jsonify(updated_process.__dict__(TIME_FORMAT))
@@ -162,11 +183,19 @@ def send_process_data():
 
 @app.route('/process_list', methods=["GET"])
 def send_process_list():
+    """
+    REST API to send the process queue via GET.
+    :return:    JSON, the process queue.
+    """
     global process_list
     return jsonify([process.__dict__(TIME_FORMAT) for process in process_list])
 
 @app.route('/complete_process_list', methods=["GET"])
 def send_complete_list():
+    """
+    REST API to send the completed process list via GET.
+    :return:    JSON, the completed process list.
+    """
     global complete_process
     return jsonify([process.__dict__(TIME_FORMAT) for process in complete_process])
 
