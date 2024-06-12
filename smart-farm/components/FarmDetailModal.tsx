@@ -8,9 +8,10 @@ import Typography from '@mui/material/Typography';
 import { TextField } from '@mui/material';
 import { Input } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dayjs } from 'dayjs';
 import axios from 'axios';
+import { MqttClient } from 'mqtt';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -28,12 +29,15 @@ export default function TransitionsModal({
   open,
   setOpen,
   area,
+  client,
 }: {
   open: boolean;
   setOpen: any;
   area: string;
+  client: MqttClient | null;
 }) {
   const handleClose = () => setOpen(false);
+  const [messages, setMessages] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     area: area,
@@ -44,8 +48,6 @@ export default function TransitionsModal({
     cycle: '',
     emergency: false,
   });
-
-  const [responseMessage, setResponseMessage] = useState('');
 
   const handleMixerChange = (index: number, value: string) => {
     const newMixer = [...formData.mixer];
@@ -93,15 +95,33 @@ export default function TransitionsModal({
         : '',
     };
     console.log(formattedData);
-    try {
-      const response = await axios.post(
-        'http://127.0.0.1:8000/add_process',
-        formattedData
+    console.log('Client:', client);
+    if (client && client.connected) {
+      client?.publish(
+        '/innovation/pumpcontroller/WSNs',
+        JSON.stringify(formattedData),
+        (err?: Error) => {
+          if (err) {
+            console.error('Publish error: ', err);
+          } else {
+            console.log(
+              `Message '${formattedData}' published to topic '/innovation/pumpcontroller/WSNs'`
+            );
+          }
+        }
       );
-      console.log('Response:', response.data);
-    } catch (error) {
-      console.error('Error posting data:', error);
+    } else {
+      console.error('MQTT client not connected');
     }
+    // try {
+    //   const response = await axios.post(
+    //     'http://127.0.0.1:8000/add_process',
+    //     formattedData
+    //   );
+    //   console.log('Response:', response.data);
+    // } catch (error) {
+    //   console.error('Error posting data:', error);
+    // }
   };
 
   return (

@@ -11,8 +11,15 @@ import { useState } from 'react';
 import Divider from '@mui/material/Divider';
 import CycleCard from './CycleCard';
 import { Fab, SvgIcon } from '@mui/material';
+import { MqttClient } from 'mqtt';
 
-export default function FarmCard({ farm }: { farm: IFarm }) {
+export default function FarmCard({
+  farm,
+  client,
+}: {
+  farm: IFarm;
+  client: MqttClient | null;
+}) {
   const [open, setOpen] = useState(false);
   const handleInit = () => setOpen(true);
   return (
@@ -57,7 +64,12 @@ export default function FarmCard({ farm }: { farm: IFarm }) {
           </div>
         </Button>
         {/* {farm.details?.isActivated && <Progress />} */}
-        <FarmDetailModal open={open} setOpen={setOpen} area={farm.area} />
+        <FarmDetailModal
+          open={open}
+          setOpen={setOpen}
+          area={farm.area}
+          client={client}
+        />
       </CardActions>
     </Card>
   );
