@@ -165,9 +165,9 @@ def add_process(message):
         id=get_new_id(process_list + complete_process),
         start_time=datetime.datetime.strptime(data["start_time"], TIME_FORMAT),
         end_time=datetime.datetime.strptime(data["end_time"], TIME_FORMAT),
-        mixer=data["mixer"],
+        mixer=[int(item) for item in data["mixer"]],
         n_mixers=NUM_MIXERS,
-        area=data["area"],
+        area=int(data["area"]),
         priority=0 if data["emergency"] else 1,
         cycle=get_cycle(process_list, data["area"]),
     )
@@ -189,9 +189,10 @@ def update_process():
         data = [data]
     updated_process_list = []
     for item in data:
-        complete_index, process = find_process(complete_process, item["id"])
+        process_id = int(item["id"])
+        complete_index, process = find_process(complete_process, process_id)
         if complete_index is None:
-            _, process = find_process(process_list, item["id"])
+            _, process = find_process(process_list, process_id)
         assert process, "Process not found."
         prev_area = process.area
         for key, value in item.items():
@@ -199,8 +200,11 @@ def update_process():
                 setattr(process, key, datetime.datetime.strptime(value, TIME_FORMAT))
             elif key == "emergency":
                 setattr(process, "priority", 0 if value else 1)
+            elif key == "mixer":
+                setattr(process, key, [int(item) for item in value])
             else:
-                setattr(process, key, value)
+                #Area
+                setattr(process, key, int(value))
 
         if complete_index is not None:
             # Update process
@@ -224,12 +228,13 @@ def delete_process():
     """
     data = request.get_json()
     global process_list, complete_process
-    index, _ = find_process(complete_process, data["id"])
+    process_id = int(data["id"])
+    index, _ = find_process(complete_process, process_id)
     if index is not None:
         del complete_process[index]
         return jsonify({"deleted": True})
     else:
-        index, _ = find_process(process_list, data["id"])
+        index, _ = find_process(process_list, process_id)
         if index is None:
             return jsonify({"deleted": False})
         del process_list[index]
@@ -256,7 +261,7 @@ def send_process_list():
     :return:    JSON, the process queue.
     """
     global process_list
-    return jsonify([get_area_dict(process_list, area) for area in range(1, 4)])
+    return jsonify([get_area_dict(process_list, area) for area in range(1, NUM_MIXERS + 1)])
 
 
 # @app.route("/completed_process_list", methods=["GET"])
@@ -266,7 +271,7 @@ def send_completed_list():
     :return:    JSON, the completed process list.
     """
     global complete_process
-    return jsonify([get_area_dict(complete_process, area) for area in range(1, 4)])
+    return jsonify([get_area_dict(complete_process, area) for area in range(1, NUM_MIXERS + 1)])
 
 
 # @app.route("/all_process", methods=["GET"])
@@ -276,7 +281,7 @@ def send_all_process():
     :return:    JSON, all process data.
     """
     global process_list, complete_process
-    return jsonify([get_area_dict(process_list + complete_process, area) for area in range(1, 4)])
+    return jsonify([get_area_dict(process_list + complete_process, area) for area in range(1, NUM_MIXERS + 1)])
 
 
 def get_cycle(ctx: list[WaterProcess], area):
