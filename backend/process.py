@@ -108,12 +108,12 @@ class WaterProcess(Process):
 
 
 
-    def __str__(self):
+    def __str__(self, time_format="%d/%m/%Y %H:%M:%S"):
         s = "________________________\nWatering Process:\n" + \
             f"ID: {self.id}\n" \
             f"Priority: {self.priority}\n" \
-            f"Start time: {str(self.start_time)}\n" \
-            f"End time: {str(self.end_time)}\n" \
+            f"Start time: {self.start_time.strftime(time_format)}\n" \
+            f"End time: {self.end_time.strftime(time_format)}\n" \
             f"isActive: {self.isActive}\n" \
             f"isCompleted: {self.isCompleted}\n" \
             f"Area: {self.area}\n"

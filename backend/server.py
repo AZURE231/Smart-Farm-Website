@@ -1,22 +1,20 @@
 import signal, sys
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from gevent.pywsgi import WSGIServer
 from threading import Thread, Lock, Event
 from process import WaterProcess, Capacity
 import scheduler
 import datetime, time
 from mqttPi import MQTTHelper
 from device import Devices
-import ast
+import json
+
 
 mqttClient = MQTTHelper()
 devices = Devices()
+stop_event = Event()
 
-app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 TIMESTEP = datetime.time(second=1)
+PUBLISH_TIME = datetime.time(second=10)
 TIME_FORMAT = "%d/%m/%Y %H:%M:%S"
 NUM_MIXERS = 3
 CAPACITY = Capacity(mixer=[20, 20, 20], n_mixers=NUM_MIXERS, time_step=TIMESTEP)
@@ -28,18 +26,18 @@ process_list = [
         mixer=[0, 100, 100],
         n_mixers=3,
         area=3,
-        start_time=datetime.datetime(2024, 6, 9, 12, 40),
-        end_time=datetime.datetime(2024, 6, 9, 12, 55),
+        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 30)),
+        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 40)),
         priority=1,
         cycle=2,
     ),
     WaterProcess(
         id=2,
-        mixer=[200, 150, 100],
+        mixer=[210, 150, 110],
         n_mixers=3,
         area=3,
-        start_time=datetime.datetime(2024, 6, 9, 12, 30),
-        end_time=datetime.datetime(2024, 6, 9, 12, 40),
+        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 40)),
+        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 50)),
         priority=0,
         cycle=1,
     ),
@@ -48,8 +46,8 @@ process_list = [
         mixer=[100, 200, 300],
         n_mixers=3,
         area=1,
-        start_time=datetime.datetime(2024, 6, 9, 9, 30),
-        end_time=datetime.datetime(2024, 6, 9, 9, 40),
+        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(9, 30)),
+        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(9, 40)),
         cycle=1,
     ),
     WaterProcess(
@@ -57,8 +55,8 @@ process_list = [
         mixer=[200, 0, 200],
         n_mixers=3,
         area=2,
-        start_time=datetime.datetime(2024, 6, 9, 14, 30),
-        end_time=datetime.datetime(2024, 6, 9, 15, 40),
+        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(15, 30)),
+        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(15, 40)),
         priority=1,
         cycle=1,
     ),
@@ -67,25 +65,25 @@ process_list = [
         mixer=[0, 200, 100],
         n_mixers=3,
         area=1,
-        start_time=datetime.datetime(2024, 6, 9, 14, 41),
-        end_time=datetime.datetime(2024, 6, 9, 14, 55),
+        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(14, 41)),
+        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(14, 51)),
         priority=0,
         cycle=2,
     ),
 ]
 complete_process = []
 
-# updated_process = None
-updated_process = WaterProcess(
-    id=1,
-    start_time=datetime.datetime.now(),
-    end_time=datetime.datetime.now(),
-    mixer=[100, 200, 300],
-    area=1,
-    priority=1,
-    isActive=False,
-    cycle=0,
-)
+updated_process = None
+# updated_process = WaterProcess(
+#     id=1,
+#     start_time=datetime.datetime.now(),
+#     end_time=datetime.datetime.now(),
+#     mixer=[100, 200, 300],
+#     area=1,
+#     priority=1,
+#     isActive=False,
+#     cycle=0,
+# )
 
 
 def background_task():
@@ -96,17 +94,27 @@ def background_task():
     global process_list, complete_process, updated_process
     select_index, select_process = None, None
     counter = 0
-    all_complete = False
+    all_complete, stop_publish = False, False
     global MIXER
     MIXER = [0,0,0]
     while not stop_event.is_set():
         time.sleep(1)
         counter -= 1
-        # All process completed
-        # scheduler.print_process_list(process_list)
+        # Reset counter
         if counter <= 0:
-            # Reset counter
-            counter = int(TIMESTEP.second)
+            counter = 60
+        # Send update request to Web View
+        if counter % int(PUBLISH_TIME.second) == 0 and not stop_publish:
+            publish_result = send_all_process()
+            if publish_result.rc == mqttClient.MQTT_ERR_SUCCESS:
+                print("Process published.")
+            else:
+                print("Failed to publish the process.")
+            if all_complete:
+                stop_publish = True
+
+        # Schedule process
+        if counter % int(TIMESTEP.second) == 0:
             if not process_list:
                 if not all_complete:
                     print("All process completed.")
@@ -119,47 +127,40 @@ def background_task():
                 if scheduler.update_process(process_list[select_index], select_process.mixer):
                     complete_process.append(process_list.pop(select_index))
                 print("___________________\nComplete process: ", len(complete_process))
-            # Update to client
-            all_complete = False
+
+            # Select process for the next step
+            all_complete, stop_publish = False, False
             process_list = scheduler.sort_by_time(process_list)
             select_index, select_process = scheduler.select_process(process_list, TIMESTEP, CAPACITY)
             if not select_process:
                 print("No process selected.")
-                MIXER = [0,0,0]
+                MIXER = [0, 0, 0]
                 continue
 
             # Terminate process through com port
             MIXER = select_process.mixer  # List of mixer volume. Ex: [20, 10, 15]
             AREA = select_process.area
 
-            # ======= YOUR CODE START HERE =======
-            
-            # ======= YOUR CODE END HERE =======
-
 
 def logic():
     while not stop_event.is_set():
         message = mqttClient.get_payload()
         if message != "":
-            add_process(message.replace("true", "True").replace("false", "False").replace("null", "None"))
-            
+            data = json.loads(message)
+            add_process(data)
+
+
 def control():
     while not stop_event.is_set():
         devices.controlDevices(MIXER)
-        
 
-# @app.route("/add_process", methods=["POST"])
-def add_process(message):
+
+def add_process(data):
     """
     REST API to add a new process from client via POST to the process list.
     :return:    str, the new process.
     """
-    # data = request.get_json()
-    data = ast.literal_eval(message)
-    # return jsonify(data)
-
     global process_list, complete_process
-
     # Remove process with the same id in queue.
     process = WaterProcess(
         id=get_new_id(process_list + complete_process),
@@ -173,16 +174,13 @@ def add_process(message):
     )
     process_list.append(process)
     scheduler.print_process_list(process_list)
-    # return jsonify(process.__dict__(TIME_FORMAT))
 
 
-# @app.route("/update_process", methods=["POST"])
-def update_process():
+def update_process(data):
     """
     REST API to update process from client via POST.
     :return:    str, the updated process.
     """
-    # data = request.get_json()
     global process_list, complete_process
     # If single update, convert to list
     if not isinstance(data, list):
@@ -216,92 +214,83 @@ def update_process():
                 complete_process.pop(complete_index)
                 process_list.append(process)
         updated_process_list.append(process)
-    scheduler.print_process_list(process_list)
-    return jsonify([process.__dict__() for process in updated_process_list])
+    scheduler.print_process_list(updated_process_list)
 
 
-# @app.route("/delete_process", methods=["POST"])
-def delete_process():
+def delete_process(data):
     """
     REST API to delete process from client via POST.
     :return:    str, notify the process is deleted.
     """
-    data = request.get_json()
     global process_list, complete_process
     process_id = int(data["id"])
     index, _ = find_process(complete_process, process_id)
     if index is not None:
         del complete_process[index]
-        return jsonify({"deleted": True})
+        print("Completed process deleted.")
+        return
     else:
         index, _ = find_process(process_list, process_id)
         if index is None:
-            return jsonify({"deleted": False})
+            print("No process to delete.")
         del process_list[index]
-    scheduler.print_process_list(process_list)
-    return jsonify({"deleted": True})
+        print("Process deleted.")
 
 
-# @app.route("/process_data", methods=["GET"])
 def send_process_data():
     """
     REST API to send the updated process data via GET.
-    :return:    JSON, the updated process data.
     """
     global updated_process
     if updated_process:
-        return jsonify(updated_process.__dict__(TIME_FORMAT))
-    return jsonify({})
+        return mqttClient.publish(mqttClient.MQTT_TOPIC_WEB_UPDATE, json.dumps(updated_process.__dict__(TIME_FORMAT)))
+    return mqttClient.publish(mqttClient.MQTT_TOPIC_WEB_UPDATE, json.dumps({}))
 
 
-# @app.route("/process_list", methods=["GET"])
 def send_process_list():
     """
     REST API to send the process queue via GET.
-    :return:    JSON, the process queue.
     """
-    global process_list
-    return jsonify([get_area_dict(process_list, area) for area in range(1, NUM_MIXERS + 1)])
+    global complete_process
+    process_dict = [get_area_dict(process_list, area) for area in range(1, NUM_MIXERS + 1)]
+    return mqttClient.publish(mqttClient.MQTT_TOPIC_WEB_UPDATE, json.dumps(process_dict))
 
 
-# @app.route("/completed_process_list", methods=["GET"])
 def send_completed_list():
     """
     REST API to send the completed process list via GET.
-    :return:    JSON, the completed process list.
     """
     global complete_process
-    return jsonify([get_area_dict(complete_process, area) for area in range(1, NUM_MIXERS + 1)])
+    process_dict = [get_area_dict(complete_process, area) for area in range(1, NUM_MIXERS + 1)]
+    return mqttClient.publish(mqttClient.MQTT_TOPIC_WEB_UPDATE, json.dumps(process_dict))
 
 
-# @app.route("/all_process", methods=["GET"])
 def send_all_process():
     """
     REST API to send all process data via GET.
-    :return:    JSON, all process data.
     """
     global process_list, complete_process
-    return jsonify([get_area_dict(process_list + complete_process, area) for area in range(1, NUM_MIXERS + 1)])
-
+    process_dict = [get_area_dict(process_list + complete_process, area) for area in range(1, NUM_MIXERS + 1)]
+    return mqttClient.publish(mqttClient.MQTT_TOPIC_WEB_UPDATE, json.dumps(process_dict))
 
 def get_cycle(ctx: list[WaterProcess], area):
     cycle = 0
     for process in ctx:
-        if process.area == area:
+        if process.area == int(area):
             cycle += 1
     return cycle + 1
 
 
 def get_area_dict(ctx: list[WaterProcess], area):
     area_dict = {}
-    area_dict["area"] = area
-    area_dict["process"] = [process.__dict__(TIME_FORMAT) for process in ctx if process.area == area]
+    area_dict["area"] = int(area)
+    area_dict["process"] = [process.__dict__(TIME_FORMAT) for process in ctx if process.area == int(area)]
     return area_dict
 
 
 def find_process(ctx: list[WaterProcess], id):
     for i in range(len(ctx)):
-        if ctx[i].id == id:
+        if ctx[i].id == int(id):
             return i, ctx[i]
     return None, None
 
@@ -312,7 +301,6 @@ def get_new_id(ctx: [WaterProcess]):
     return max([process.id for process in ctx]) + 1
 
 
-stop_event = Event()
 
 
 def signal_handler(sig, frame):

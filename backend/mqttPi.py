@@ -18,6 +18,11 @@ class MQTTHelper:
     MQTT_TOPIC_PUB_PUMP = "/innovation/pumpcontroller"
     MQTT_TOPIC_PUB_VALVE = "/innovation/valvecontroller"
 
+    MQTT_TOPIC_WEB_REQUEST = "/innovation/pumpcontroller/smartfarm/schedule"
+    MQTT_TOPIC_WEB_UPDATE = "/innovation/pumpcontroller/smartfarm/update"
+
+    MQTT_ERR_SUCCESS = mqtt.MQTT_ERR_SUCCESS
+
     payload = ""
 
     def __init__(self):
@@ -35,12 +40,13 @@ class MQTTHelper:
         self.client.subscribe(topic)
 
     def publish(self, topic, message):
-        self.client.publish(topic, message)
+        return self.client.publish(topic, message)
 
     def on_connect(self, client, userdata, flags, reason_code):
         print(f"Connect with reason code: {str(reason_code)}")
         client.subscribe(self.MQTT_TOPIC_SUB_PUMP)
         client.subscribe(self.MQTT_TOPIC_SUB_VALVE)
+        client.subscribe(self.MQTT_TOPIC_WEB_REQUEST)
 
     def on_subscribed(self, client, userdata, mid, rc_list):
         print(f"Broker granted the following QoS: 0")
