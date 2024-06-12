@@ -85,6 +85,8 @@ class WaterProcess(Process):
                     max_ratio = mixer_ratio[i]
                     max_index = i
             mixer = []
+            if self.mixer[max_index] <= capacity.mixer[max_index]:
+                return StepProcess(area=self.area, mixer=self.mixer, n_mixers=self.n_mixers)
             for i in range(self.n_mixers):
                 if i == max_index:
                     mixer.append(capacity.mixer[i])
