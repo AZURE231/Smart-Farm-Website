@@ -13,64 +13,64 @@ devices = Devices()
 stop_event = Event()
 
 
-TIMESTEP = datetime.time(second=1)
+TIMESTEP = datetime.time(second=5)
 PUBLISH_TIME = datetime.time(second=10)
 TIME_FORMAT = "%d/%m/%Y %H:%M:%S"
 NUM_MIXERS = 3
 CAPACITY = Capacity(mixer=[20, 20, 20], n_mixers=NUM_MIXERS, time_step=TIMESTEP)
 
-# process_list = []
-process_list = [
-    WaterProcess(
-        id=1,
-        mixer=[0, 100, 100],
-        n_mixers=3,
-        area=3,
-        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 30)),
-        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 40)),
-        priority=1,
-        cycle=2,
-    ),
-    WaterProcess(
-        id=2,
-        mixer=[210, 150, 110],
-        n_mixers=3,
-        area=3,
-        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 40)),
-        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 50)),
-        priority=0,
-        cycle=1,
-    ),
-    WaterProcess(
-        id=3,
-        mixer=[100, 200, 300],
-        n_mixers=3,
-        area=1,
-        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(9, 30)),
-        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(9, 40)),
-        cycle=1,
-    ),
-    WaterProcess(
-        id=4,
-        mixer=[200, 0, 200],
-        n_mixers=3,
-        area=2,
-        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(15, 30)),
-        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(15, 40)),
-        priority=1,
-        cycle=1,
-    ),
-    WaterProcess(
-        id=5,
-        mixer=[0, 200, 100],
-        n_mixers=3,
-        area=1,
-        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(14, 41)),
-        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(14, 51)),
-        priority=0,
-        cycle=2,
-    ),
-]
+process_list = []
+# process_list = [
+#     WaterProcess(
+#         id=1,
+#         mixer=[0, 100, 100],
+#         n_mixers=3,
+#         area=3,
+#         start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 30)),
+#         end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 40)),
+#         priority=1,
+#         cycle=2,
+#     ),
+#     WaterProcess(
+#         id=2,
+#         mixer=[210, 150, 110],
+#         n_mixers=3,
+#         area=3,
+#         start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 40)),
+#         end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 50)),
+#         priority=0,
+#         cycle=1,
+#     ),
+#     WaterProcess(
+#         id=3,
+#         mixer=[100, 200, 300],
+#         n_mixers=3,
+#         area=1,
+#         start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(9, 30)),
+#         end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(9, 40)),
+#         cycle=1,
+#     ),
+#     WaterProcess(
+#         id=4,
+#         mixer=[200, 0, 200],
+#         n_mixers=3,
+#         area=2,
+#         start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(15, 30)),
+#         end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(15, 40)),
+#         priority=1,
+#         cycle=1,
+#     ),
+#     WaterProcess(
+#         id=5,
+#         mixer=[0, 200, 100],
+#         n_mixers=3,
+#         area=1,
+#         start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(14, 41)),
+#         end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(14, 51)),
+#         priority=0,
+#         cycle=2,
+#     ),
+# ]
 complete_process = []
 
 updated_process = None
@@ -96,7 +96,7 @@ def background_task():
     counter = 0
     all_complete, stop_publish = False, False
     global MIXER
-    MIXER = [0,0,0]
+    MIXER = [0, 0, 0]
     while not stop_event.is_set():
         time.sleep(1)
         counter -= 1
@@ -133,6 +133,7 @@ def background_task():
             process_list = scheduler.sort_by_time(process_list)
             select_index, select_process = scheduler.select_process(process_list, TIMESTEP, CAPACITY)
             if not select_process:
+                # scheduler.print_process_list(process_list)
                 print("No process selected.")
                 MIXER = [0, 0, 0]
                 continue
@@ -148,6 +149,7 @@ def logic():
         if message != "":
             data = json.loads(message)
             add_process(data)
+            send_all_process()
 
 
 def control():
@@ -201,7 +203,7 @@ def update_process(data):
             elif key == "mixer":
                 setattr(process, key, [int(item) for item in value])
             else:
-                #Area
+                # Area
                 setattr(process, key, int(value))
 
         if complete_index is not None:
@@ -273,6 +275,7 @@ def send_all_process():
     process_dict = [get_area_dict(process_list + complete_process, area) for area in range(1, NUM_MIXERS + 1)]
     return mqttClient.publish(mqttClient.MQTT_TOPIC_WEB_UPDATE, json.dumps(process_dict))
 
+
 def get_cycle(ctx: list[WaterProcess], area):
     cycle = 0
     for process in ctx:
@@ -299,8 +302,6 @@ def get_new_id(ctx: [WaterProcess]):
     if not ctx:
         return 1
     return max([process.id for process in ctx]) + 1
-
-
 
 
 def signal_handler(sig, frame):

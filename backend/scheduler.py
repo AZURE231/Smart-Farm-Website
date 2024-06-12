@@ -33,7 +33,7 @@ def select_process(process_list: list[WaterProcess], time_step: time, capacity: 
         return None, None
     print("===========================\nSelected process:")
     process_list[highest_priority_index].isActive = True
-    print(str(process_list[highest_priority_index]))
+    # print(str(process_list[highest_priority_index]))
     return highest_priority_index, process_list[highest_priority_index].time_step_divide(time_step, capacity)
 
 def update_process(process: WaterProcess, mixer: list[float]):
