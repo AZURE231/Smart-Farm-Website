@@ -5,109 +5,30 @@ import { IFarm } from '@/interface/farm';
 import axios from 'axios';
 import mqtt, { IClientOptions, MqttClient } from 'mqtt';
 import { useEffect, useState } from 'react';
-import { set } from 'react-hook-form';
 
-export const options: IClientOptions = {
+const options: IClientOptions = {
   host: 'mqttserver.tk',
   port: 9001,
   username: 'innovation',
   password: 'Innovation_RgPQAZoA5N',
 };
 
-const farms: IFarm[] = [
-  {
-    area: '1',
-    name: 'Carot Farm',
-    description:
-      'BKU Carrot Farm thrives on fertile, well-drained loamy soil and a temperate climate, ideal for carrot cultivation. We utilize organic farming methods, including compost fertilization and drip irrigation, ensuring high-quality produce. Our sustainable practices, such as crop rotation and eco-friendly packaging, promote environmental stewardship while delivering fresh, delicious carrots to our customers.',
-    image: 'carot.jpg',
-    process: [
-      {
-        cycle: 2,
-        end_time: '09/06/2024 14:55:00',
-        id: '5',
-        init_mixer: [0, 200, 100],
-        isActive: false,
-        isCompleted: true,
-        mixer: [0.0, 0, 0.0],
-        start_time: '09/06/2024 14:41:00',
-      },
-      {
-        cycle: 1,
-        end_time: '09/06/2024 09:40:00',
-        id: '3',
-        init_mixer: [100, 200, 300],
-        isActive: false,
-        isCompleted: true,
-        mixer: [0.0, 0.0, 0],
-        start_time: '09/06/2024 09:30:00',
-      },
-    ],
-  },
-  {
-    area: '2',
-    name: 'Carot Farm',
-    description:
-      'BKU Carrot Farm thrives on fertile, well-drained loamy soil and a temperate climate, ideal for carrot cultivation. We utilize organic farming methods, including compost fertilization and drip irrigation, ensuring high-quality produce. Our sustainable practices, such as crop rotation and eco-friendly packaging, promote environmental stewardship while delivering fresh, delicious carrots to our customers.',
-    image: 'carot.jpg',
-    process: [
-      {
-        cycle: 1,
-        end_time: '09/06/2024 15:40:00',
-        id: '4',
-        init_mixer: [200, 0, 200],
-        isActive: false,
-        isCompleted: true,
-        mixer: [0, 0.0, 0.0],
-        start_time: '09/06/2024 14:30:00',
-      },
-    ],
-  },
-  {
-    area: '3',
-    name: 'Carot Farm',
-    description:
-      'BKU Carrot Farm thrives on fertile, well-drained loamy soil and a temperate climate, ideal for carrot cultivation. We utilize organic farming methods, including compost fertilization and drip irrigation, ensuring high-quality produce. Our sustainable practices, such as crop rotation and eco-friendly packaging, promote environmental stewardship while delivering fresh, delicious carrots to our customers.',
-    image: 'carot.jpg',
-    process: [
-      {
-        cycle: 3,
-        end_time: '10/06/2024 10:15:00',
-        id: '6',
-        init_mixer: [0, 200, 300],
-        isActive: false,
-        isCompleted: true,
-        mixer: [0.0, 0.0, 0],
-        start_time: '10/06/2024 10:00:00',
-      },
-      {
-        cycle: 2,
-        end_time: '09/06/2024 12:55:00',
-        id: '1',
-        init_mixer: [0, 100, 100],
-        isActive: false,
-        isCompleted: true,
-        mixer: [0.0, 0, 0.0],
-        start_time: '09/06/2024 12:40:00',
-      },
-    ],
-  },
-];
-
-const farms_description = [
+const initialFarms: IFarm[] = [
   {
     area: '1',
     name: 'Carrot Farm',
     description:
       'BKU Carrot Farm thrives on fertile, well-drained loamy soil and a temperate climate, ideal for carrot cultivation.',
     image: 'carot.jpg',
+    process: [],
   },
   {
     area: '2',
-    name: 'Lettuce Farm',
+    name: 'Letttuce Farm',
     description:
       'BKU Lettuce Farm flourishes with nutrient-rich, well-drained soil and a cool, temperate climate perfect for lettuce growth.',
     image: 'lettuce.jpg',
+    process: [],
   },
   {
     area: '3',
@@ -115,85 +36,85 @@ const farms_description = [
     description:
       'Tomato Farm thrives on rich, well-drained soil and a warm, sunny climate ideal for tomato cultivation.',
     image: 'tomatoes.jpg',
+    process: [],
   },
 ];
 
 export default function Home() {
-  const [data, setData] = useState<IFarm[]>();
+  const [farms, setFarms] = useState<IFarm[]>(initialFarms);
   const [connected, setConnected] = useState(false);
   const [messages, setMessages] = useState<string[]>([]);
   const [client, setClient] = useState<MqttClient | null>(null);
 
   useEffect(() => {
-    const client = mqtt.connect(options);
+    const mqttClient = mqtt.connect(options);
 
-    client.on('message', (message) => {
-      setMessages(messages.concat(message.toString()));
-    });
-
-    client.on('connect', () => {
+    mqttClient.on('connect', () => {
       console.log('Connected to MQTT broker');
-      setClient(client);
+      setClient(mqttClient);
+      setConnected(true);
+      mqttClient.subscribe(
+        '/innovation/pumpcontroller/smartfarm/update',
+        (err) => {
+          if (err) {
+            console.error('Subscription error:', err);
+          } else {
+            console.log('Subscribed to topic');
+          }
+        }
+      );
     });
 
-    client.on('error', (err: Error) => {
+    mqttClient.on('message', (topic, message) => {
+      console.log('Received on topic:', topic);
+      console.log('Received message:', message.toString());
+
+      const data = JSON.parse(message.toString());
+      updateFarmsProcess(data);
+      console.log('Farms!!!!!!!!!!!!!!!!!!!');
+      setMessages((prevMessages) => [...prevMessages, message.toString()]);
+    });
+
+    mqttClient.on('error', (err) => {
       console.error('Connection error: ', err);
-      client?.end();
+      mqttClient.end();
     });
-
-    client.subscribe('/innovation/pumpcontroller/WSNs');
 
     return () => {
-      if (client) {
-        client.unsubscribe('test');
-        client.end();
+      if (mqttClient) {
+        mqttClient.end();
       }
     };
   }, []);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await axios.get('http://127.0.0.1:8000/all_process');
-  //       const mergedData = response.data.map((farm: IFarm) => {
-  //         const description = farms_description.find(
-  //           (desc) => desc.area == farm.area
-  //         );
-  //         return description ? { ...farm, ...description } : farm;
-  //       });
-  //       console.log('Data:', mergedData);
-  //       setData(mergedData);
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //     }
-  //   };
-
-  //   // Fetch data immediately and then at intervals
-  //   fetchData();
-  //   const intervalId = setInterval(fetchData, 5000); // Pull every 5 seconds
-
-  //   setConnected(true);
-
-  //   // Cleanup interval on component unmount
-  //   return () => {
-  //     clearInterval(intervalId);
-  //     setConnected(false);
-  //   };
-  // }, []);
+  const updateFarmsProcess = (data: { area: number; process: any[] }[]) => {
+    setFarms((prevFarms) =>
+      prevFarms.map((farm) => {
+        const updatedFarm = data.find(
+          (item) => item.area === parseInt(farm.area)
+        );
+        if (updatedFarm) {
+          return {
+            ...farm,
+            process: updatedFarm.process,
+          };
+        }
+        return farm;
+      })
+    );
+  };
 
   return (
     <main className="container max-w-4xl mx-auto flex flex-col items-center justify-center mt-20 md:mt-0 md:h-screen">
-      {
-        <div>
-          <Clock />
-          <div className="flex flex-col md:flex-row gap-3">
-            {farms &&
-              farms.map((farm) => (
-                <FarmCard key={farm.area} farm={farm} client={client} />
-              ))}
-          </div>
+      <div>
+        <Clock />
+        <div className="flex flex-col md:flex-row gap-3">
+          {farms &&
+            farms.map((farm) => (
+              <FarmCard key={farm.area} farm={farm} client={client} />
+            ))}
         </div>
-      }
+      </div>
     </main>
   );
 }
