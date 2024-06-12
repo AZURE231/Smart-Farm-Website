@@ -18,9 +18,11 @@ class MQTTHelper:
     MQTT_TOPIC_PUB_PUMP = "/innovation/pumpcontroller"
     MQTT_TOPIC_PUB_VALVE = "/innovation/valvecontroller"
 
+    payload = ""
+
     def __init__(self):
-        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-        # self.client = mqtt.Client()
+        # self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        self.client = mqtt.Client()
         self.client.username_pw_set(self.MQTT_USERNAME, self.MQTT_PASSWORD)
         self.client.connect(self.MQTT_SERVER, int(self.MQTT_PORT), 60)
 
@@ -45,3 +47,11 @@ class MQTTHelper:
 
     def on_message(self, client, userdata, message):
         print("Received message " + str(message.payload.decode("utf-8")) + " on topic " + message.topic)
+        self.payload = str(message.payload.decode("utf-8"))
+
+    def get_payload(self):
+        if self.payload == "":
+            return ""
+        res = self.payload
+        self.payload = ""
+        return res
