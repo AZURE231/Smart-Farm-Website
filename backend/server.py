@@ -13,68 +13,68 @@ devices = Devices()
 stop_event = Event()
 
 
-TIMESTEP = datetime.time(second=5)
+TIMESTEP = datetime.time(second=1)
 PUBLISH_TIME = datetime.time(second=10)
 TIME_FORMAT = "%d/%m/%Y %H:%M:%S"
 NUM_MIXERS = 3
 CAPACITY = Capacity(mixer=[20, 20, 20], n_mixers=NUM_MIXERS, time_step=TIMESTEP)
 
-process_list = []
-# process_list = [
-#     WaterProcess(
-#         id=1,
-#         mixer=[0, 100, 100],
-#         n_mixers=3,
-#         area=3,
-#         start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 30)),
-#         end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 40)),
-#         priority=1,
-#         cycle=2,
-#     ),
-#     WaterProcess(
-#         id=2,
-#         mixer=[210, 150, 110],
-#         n_mixers=3,
-#         area=3,
-#         start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 40)),
-#         end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 50)),
-#         priority=0,
-#         cycle=1,
-#     ),
-#     WaterProcess(
-#         id=3,
-#         mixer=[100, 200, 300],
-#         n_mixers=3,
-#         area=1,
-#         start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(9, 30)),
-#         end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(9, 40)),
-#         cycle=1,
-#     ),
-#     WaterProcess(
-#         id=4,
-#         mixer=[200, 0, 200],
-#         n_mixers=3,
-#         area=2,
-#         start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(15, 30)),
-#         end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(15, 40)),
-#         priority=1,
-#         cycle=1,
-#     ),
-#     WaterProcess(
-#         id=5,
-#         mixer=[0, 200, 100],
-#         n_mixers=3,
-#         area=1,
-#         start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(14, 41)),
-#         end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(14, 51)),
-#         priority=0,
-#         cycle=2,
-#     ),
-# ]
+# process_list = []
+process_list = [
+    WaterProcess(
+        id=1,
+        mixer=[0, 100, 100],
+        n_mixers=3,
+        area=3,
+        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 30)),
+        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 40)),
+        priority=1,
+        cycle=2,
+    ),
+    WaterProcess(
+        id=2,
+        mixer=[210, 150, 110],
+        n_mixers=3,
+        area=3,
+        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 40)),
+        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(12, 50)),
+        priority=0,
+        cycle=1,
+    ),
+    WaterProcess(
+        id=3,
+        mixer=[100, 200, 300],
+        n_mixers=3,
+        area=1,
+        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(9, 30)),
+        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(9, 40)),
+        cycle=1,
+    ),
+    WaterProcess(
+        id=4,
+        mixer=[200, 0, 200],
+        n_mixers=3,
+        area=2,
+        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(15, 30)),
+        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(15, 40)),
+        priority=1,
+        cycle=1,
+    ),
+    WaterProcess(
+        id=5,
+        mixer=[0, 200, 100],
+        n_mixers=3,
+        area=1,
+        start_time=datetime.datetime.combine(datetime.date.today(), datetime.time(14, 41)),
+        end_time=datetime.datetime.combine(datetime.date.today(), datetime.time(14, 51)),
+        priority=0,
+        cycle=2,
+    ),
+]
 complete_process = []
 
-updated_process = None
-# updated_process = WaterProcess(
+to_update_process = None
+# to_update_process = WaterProcess(
 #     id=1,
 #     start_time=datetime.datetime.now(),
 #     end_time=datetime.datetime.now(),
@@ -91,7 +91,7 @@ def background_task():
     Background task to schedule, terminate and update process.
     :return:
     """
-    global process_list, complete_process, updated_process
+    global process_list, complete_process, to_update_process
     select_index, select_process = None, None
     counter = 0
     all_complete, stop_publish = False, False
@@ -121,13 +121,12 @@ def background_task():
                     all_complete = True
                 continue
             # Update process in previous step
-            if select_process:
-                updated_process = process_list[select_index]
+            if select_process and to_update_process:
                 # Process terminated successfully
-                if scheduler.update_process(process_list[select_index], select_process.mixer):
-                    complete_process.append(process_list.pop(select_index))
-                print("___________________\nComplete process: ", len(complete_process))
-
+                if scheduler.update_process(to_update_process, select_process.mixer):
+                    complete_process.append(to_update_process)
+                    process_list.remove(to_update_process)
+                    print("___________________\nComplete process: ", len(complete_process))
             # Select process for the next step
             all_complete, stop_publish = False, False
             process_list = scheduler.sort_by_time(process_list)
@@ -139,6 +138,7 @@ def background_task():
                 continue
 
             # Terminate process through com port
+            to_update_process = process_list[select_index]
             MIXER = select_process.mixer  # List of mixer volume. Ex: [20, 10, 15]
             AREA = select_process.area
 
@@ -243,9 +243,9 @@ def send_process_data():
     """
     REST API to send the updated process data via GET.
     """
-    global updated_process
-    if updated_process:
-        return mqttClient.publish(mqttClient.MQTT_TOPIC_WEB_UPDATE, json.dumps(updated_process.__dict__(TIME_FORMAT)))
+    global to_update_process
+    if to_update_process:
+        return mqttClient.publish(mqttClient.MQTT_TOPIC_WEB_UPDATE, json.dumps(to_update_process.__dict__(TIME_FORMAT)))
     return mqttClient.publish(mqttClient.MQTT_TOPIC_WEB_UPDATE, json.dumps({}))
 
 

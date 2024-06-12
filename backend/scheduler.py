@@ -31,7 +31,7 @@ def select_process(process_list: list[WaterProcess], time_step: time, capacity: 
 
     if highest_priority_index is None:
         return None, None
-    print("===========================\nSelected process:")
+    # print("===========================\nSelected process:")
     process_list[highest_priority_index].isActive = True
     # print(str(process_list[highest_priority_index]))
     return highest_priority_index, process_list[highest_priority_index].time_step_divide(time_step, capacity)
