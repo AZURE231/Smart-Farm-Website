@@ -3,6 +3,14 @@ import serial.tools.list_ports
 
 
 class Devices:
+    
+    prv_status1 = False
+    prv_status2 = False
+    prv_status3 = False
+    
+    cur_status1 = False
+    cur_status2 = False
+    cur_status3 = False
 
     def __init__(self):
         port_name = self.getPort()
@@ -70,3 +78,26 @@ class Devices:
             self.ser.write(self.relay3_OFF)
         time.sleep(1)
         print(self.serial_read_data(self.ser))
+        
+    def controlDevices(self, listMixers):
+        for index, mixer in enumerate(listMixers):
+            if index == 0:
+                self.cur_status1 = True if mixer else False    
+            if index == 1:
+                self.cur_status2 = True if mixer else False
+            if index == 2:
+                self.cur_status3 = True if mixer else False
+            
+            if self.cur_status1 != self.prv_status1:
+                self.prv_status1 = self.cur_status1
+                self.setDevice1(self.cur_status1)                    
+            
+            if self.cur_status2 != self.prv_status2:
+                self.prv_status2 = self.cur_status2
+                self.setDevice2(self.cur_status2)                    
+            
+            if self.cur_status3 != self.prv_status3:
+                self.prv_status3 = self.cur_status3
+                self.setDevice3(self.cur_status3)                    
+            
+        

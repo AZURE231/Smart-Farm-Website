@@ -97,6 +97,8 @@ def background_task():
     select_index, select_process = None, None
     counter = 0
     all_complete = False
+    global MIXER
+    MIXER = [0,0,0]
     while not stop_event.is_set():
         time.sleep(1)
         counter -= 1
@@ -123,6 +125,7 @@ def background_task():
             select_index, select_process = scheduler.select_process(process_list, TIMESTEP, CAPACITY)
             if not select_process:
                 print("No process selected.")
+                MIXER = [0,0,0]
                 continue
 
             # Terminate process through com port
@@ -130,7 +133,7 @@ def background_task():
             AREA = select_process.area
 
             # ======= YOUR CODE START HERE =======
-
+            
             # ======= YOUR CODE END HERE =======
 
 
@@ -139,11 +142,13 @@ def logic():
         message = mqttClient.get_payload()
         if message != "":
             add_process(message.replace("true", "True").replace("false", "False").replace("null", "None"))
+            
+def control():
+    while not stop_event.is_set():
+        devices.controlDevices(MIXER)
+        
 
-        # time.sleep(2)
-
-
-@app.route("/add_process", methods=["POST"])
+# @app.route("/add_process", methods=["POST"])
 def add_process(message):
     """
     REST API to add a new process from client via POST to the process list.
@@ -151,7 +156,6 @@ def add_process(message):
     """
     # data = request.get_json()
     data = ast.literal_eval(message)
-    # print(data["mixer"])
     # return jsonify(data)
 
     global process_list, complete_process
@@ -172,7 +176,7 @@ def add_process(message):
     # return jsonify(process.__dict__(TIME_FORMAT))
 
 
-@app.route("/update_process", methods=["POST"])
+# @app.route("/update_process", methods=["POST"])
 def update_process():
     """
     REST API to update process from client via POST.
@@ -212,7 +216,7 @@ def update_process():
     return jsonify([process.__dict__() for process in updated_process_list])
 
 
-@app.route("/delete_process", methods=["POST"])
+# @app.route("/delete_process", methods=["POST"])
 def delete_process():
     """
     REST API to delete process from client via POST.
@@ -233,7 +237,7 @@ def delete_process():
     return jsonify({"deleted": True})
 
 
-@app.route("/process_data", methods=["GET"])
+# @app.route("/process_data", methods=["GET"])
 def send_process_data():
     """
     REST API to send the updated process data via GET.
@@ -245,7 +249,7 @@ def send_process_data():
     return jsonify({})
 
 
-@app.route("/process_list", methods=["GET"])
+# @app.route("/process_list", methods=["GET"])
 def send_process_list():
     """
     REST API to send the process queue via GET.
@@ -255,7 +259,7 @@ def send_process_list():
     return jsonify([get_area_dict(process_list, area) for area in range(1, 4)])
 
 
-@app.route("/completed_process_list", methods=["GET"])
+# @app.route("/completed_process_list", methods=["GET"])
 def send_completed_list():
     """
     REST API to send the completed process list via GET.
@@ -265,7 +269,7 @@ def send_completed_list():
     return jsonify([get_area_dict(complete_process, area) for area in range(1, 4)])
 
 
-@app.route("/all_process", methods=["GET"])
+# @app.route("/all_process", methods=["GET"])
 def send_all_process():
     """
     REST API to send all process data via GET.
@@ -316,8 +320,10 @@ if __name__ == "__main__":
 
     thread1 = Thread(target=background_task)
     thread2 = Thread(target=logic)
+    thread3 = Thread(target=control)
     thread1.start()
     thread2.start()
+    thread3.start()
 
     try:
         # Keep the main thread running, waiting for Ctrl+C
@@ -329,6 +335,7 @@ if __name__ == "__main__":
     # Wait for the threads to finish
     thread1.join()
     thread2.join()
+    thread3.join()
 
     print("Threads have stopped.")
     print("Main program is exiting.")
