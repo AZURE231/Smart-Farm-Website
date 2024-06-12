@@ -5,7 +5,7 @@ import Modal from '@mui/material/Modal';
 import Fade from '@mui/material/Fade';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import { TextField } from '@mui/material';
+import { Checkbox, FormControlLabel, TextField } from '@mui/material';
 import { Input } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers';
 import { useEffect, useState } from 'react';
@@ -41,15 +41,15 @@ export default function TransitionsModal({
 
   const [formData, setFormData] = useState({
     area: area,
-    id: '4',
-    mixer: ['', '', ''],
+    id: 4,
+    mixer: [0, 0, 0],
     start_time: null as Dayjs | null,
     end_time: null as Dayjs | null,
-    cycle: '',
+    cycle: 0,
     emergency: false,
   });
 
-  const handleMixerChange = (index: number, value: string) => {
+  const handleMixerChange = (index: number, value: number) => {
     const newMixer = [...formData.mixer];
     newMixer[index] = value;
     setFormData({
@@ -68,10 +68,10 @@ export default function TransitionsModal({
         [field]: e,
       });
     } else if ('target' in e!) {
-      const { name, value } = e.target;
+      const { name, value, type, checked } = e.target as HTMLInputElement;
       setFormData({
         ...formData,
-        [name]: value,
+        [name]: type === 'checkbox' ? checked : value,
       });
     }
   };
@@ -98,14 +98,14 @@ export default function TransitionsModal({
     console.log('Client:', client);
     if (client && client.connected) {
       client?.publish(
-        '/innovation/pumpcontroller/WSNs',
+        '/innovation/pumpcontroller/smartfarm/schedule',
         JSON.stringify(formattedData),
         (err?: Error) => {
           if (err) {
             console.error('Publish error: ', err);
           } else {
             console.log(
-              `Message '${formattedData}' published to topic '/innovation/pumpcontroller/WSNs'`
+              `Message '${formattedData}' published to topic '/innovation/pumpcontroller/smartfarm/schedule'`
             );
           }
         }
@@ -153,7 +153,7 @@ export default function TransitionsModal({
                   name="mixer_1"
                   onChange={(e) => {
                     checkNumber(e);
-                    handleMixerChange(0, e.target.value);
+                    handleMixerChange(0, Number(e.target.value));
                   }}
                 />
                 <TextField
@@ -163,7 +163,7 @@ export default function TransitionsModal({
                   name="mixer_2"
                   onChange={(e) => {
                     checkNumber(e);
-                    handleMixerChange(1, e.target.value);
+                    handleMixerChange(1, Number(e.target.value));
                   }}
                 />
                 <TextField
@@ -173,7 +173,7 @@ export default function TransitionsModal({
                   name="mixer_3"
                   onChange={(e) => {
                     checkNumber(e);
-                    handleMixerChange(2, e.target.value);
+                    handleMixerChange(2, Number(e.target.value));
                   }}
                 />
               </div>
@@ -199,6 +199,16 @@ export default function TransitionsModal({
                   }
                   handleChange(e);
                 }}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    onChange={(e) => {
+                      setFormData({ ...formData, emergency: e.target.checked });
+                    }}
+                  />
+                }
+                label="Emergency"
               />
               <div className="mt-5">
                 <Button onClick={handleClose}>Close</Button>
